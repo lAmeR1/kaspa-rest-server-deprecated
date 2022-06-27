@@ -8,6 +8,7 @@ grpcio = "*"
 grpcio-tools = "*"
 fastapi = "*"
 uvicorn = "*"
+gunicorn = "*"
 
 [requires]
 python_version = "3.10"
