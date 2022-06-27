@@ -66,13 +66,13 @@ def get_block(block_id: str):
     return resp["getBlockResponse"]
 
 
-@app.get("/infos/blockdag")
+@app.get("/info/blockdag")
 def get_blockdag():
     resp = kaspad_client.request("getBlockDagInfoRequest")
     return resp["getBlockDagInfoResponse"]
 
 
-@app.get("/infos/coinsupply")
+@app.get("/info/coinsupply")
 def get_coinsupply():
     resp = kaspad_client.request("getCoinSupplyRequest")
     return {
@@ -81,14 +81,14 @@ def get_coinsupply():
     }
 
 
-@app.get("/infos/kaspad")
-def get_infos():
+@app.get("/info/kaspad")
+def get_info_kaspad():
     resp = kaspad_client.request("getInfoRequest")
     resp["getInfoResponse"].pop("p2pId")
     return resp["getInfoResponse"]
 
 
-@app.get("/infos/network")
+@app.get("/info/network")
 def get_network():
     resp = kaspad_client.request("getBlockDagInfoRequest")
     return resp["getBlockDagInfoResponse"]
