@@ -7,8 +7,6 @@ name = "pypi"
 grpcio = "*"
 grpcio-tools = "*"
 fastapi = "*"
-
-[dev-packages]
 uvicorn = "*"
 
 [requires]
