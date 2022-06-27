@@ -16,6 +16,9 @@ for i in range(100):
     except KeyError:
         break
 
+if not kaspad_hosts:
+    raise Exception('Please set at least KASPAD_HOST_1 environment variable.')
+
 kaspad_client = KaspadMultiClient(kaspad_hosts)
 
 
