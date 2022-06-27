@@ -89,9 +89,3 @@ def get_infos():
 def get_network():
     resp = kaspad_client.request("getBlockDagInfoRequest")
     return resp["getBlockDagInfoResponse"]
-
-
-if __name__ == '__main__':
-    import uvicorn
-
-    uvicorn.run(app)
