@@ -5,7 +5,17 @@ from fastapi import FastAPI
 
 from kaspad.KaspadMultiClient import KaspadMultiClient
 
-app = FastAPI()
+app = FastAPI(
+    title="Kaspa REST-API server",
+    description="This server is to communicate with kaspa network via REST-API",
+    version="0.0.2",
+    contact={
+        "name": "lAmeR1"
+    },
+    license_info={
+        "name": "MIT LICENSE"
+    }
+)
 
 kaspad_hosts = []
 
