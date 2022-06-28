@@ -2,7 +2,6 @@
 from contextlib import suppress
 
 from kaspad.KaspadClient import KaspadClient
-
 # pipenv run python -m grpc_tools.protoc -I./protos --python_out=. --grpc_python_out=. ./protos/rpc.proto ./protos/messages.proto ./protos/p2p.proto
 from kaspad.KaspadThread import KaspadCommunicationError
 
@@ -10,7 +9,7 @@ from kaspad.KaspadThread import KaspadCommunicationError
 class KaspadMultiClient(object):
     def __init__(self, hosts: list[str]):
         self.kaspads = [KaspadClient(*h.split(":")) for h in hosts]
-        self.__default_kaspad = None
+        self.__default_kaspad = None  # type: KaspadClient
         self.__new_default_kaspad()
 
     def __new_default_kaspad(self):
@@ -24,13 +23,12 @@ class KaspadMultiClient(object):
         else:
             raise KaspadCommunicationError('Kaspads not working.')
 
-    def request(self, command, params=None):
+    def request(self, command, params=None, timeout=5):
         try:
-            return self.__default_kaspad.request(command, params)
+            return self.__default_kaspad.request(command, params, timeout=timeout)
         except KaspadCommunicationError:
             self.__new_default_kaspad()
-            return self.__default_kaspad.request(command, params)
-
+            return self.__default_kaspad.request(command, params, timeout=timeout)
 
     def notify(self, command, params, callback):
         try:

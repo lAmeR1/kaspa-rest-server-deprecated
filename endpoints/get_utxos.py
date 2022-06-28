@@ -39,5 +39,5 @@ async def get_utxos_for_address(kaspa_address: str = Path(
     resp = kaspad_client.request("getUtxosByAddressesRequest",
                                  params={
                                      "addresses": [kaspa_address]
-                                 })
+                                 }, timeout=120)
     return (utxo for utxo in resp["getUtxosByAddressesResponse"]["entries"] if utxo["address"] == kaspa_address)
