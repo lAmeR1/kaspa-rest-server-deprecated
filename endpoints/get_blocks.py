@@ -53,7 +53,7 @@ class BlockResponse(BaseModel):
     blocks: List[BlockModel] | None
 
 
-@app.get("/blocks/{blockId}", response_model=BlockModel)
+@app.get("/blocks/{blockId}", response_model=BlockModel, tags=["Kaspa blocks"])
 async def get_block(blockId: str = Path(regex="[a-f0-9]{64}")):
     """
     Get block information for a given block id
@@ -66,7 +66,7 @@ async def get_block(blockId: str = Path(regex="[a-f0-9]{64}")):
 
     return resp["getBlockResponse"]["block"]
 
-@app.get("/blocks", response_model=BlockResponse)
+@app.get("/blocks", response_model=BlockResponse, tags=["Kaspa blocks"])
 async def get_blocks(lowHash: str = Query(regex="[a-f0-9]{64}"),
                      includeBlocks: bool = False,
                      includeTransactions: bool = False):

@@ -9,7 +9,7 @@ class BalanceResponse(BaseModel):
     address: str = "kaspa:pzhh76qc82wzduvsrd9xh4zde9qhp0xc8rl7qu2mvl2e42uvdqt75zrcgpm00"
     balance: int = 38240000000
 
-@app.get("/addresses/{kaspaAddress}/balance", response_model=BalanceResponse)
+@app.get("/addresses/{kaspaAddress}/balance", response_model=BalanceResponse, tags=["Kaspa addresses"])
 async def get_balance_from_kaspa_address(
         kaspaAddress: str = Path(
             description="Kaspa address as string e.g. kaspa:pzhh76qc82wzduvsrd9xh4zde9qhp0xc8rl7qu2mvl2e42uvdqt75zrcgpm00",

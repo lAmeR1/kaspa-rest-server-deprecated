@@ -10,7 +10,7 @@ class CoinSupplyResponse(BaseModel):
     maxSupply: str = "2900000000000000000"
 
 
-@app.get("/info/coinsupply", response_model=CoinSupplyResponse)
+@app.get("/info/coinsupply", response_model=CoinSupplyResponse, tags=["Kaspa network info"])
 async def get_coinsupply():
     """
     Get $KAS coin supply information

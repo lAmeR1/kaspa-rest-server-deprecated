@@ -24,7 +24,7 @@ class NetworkResponse(BaseModel):
     virtualDaaScore: str = "19989984"
 
 
-@app.get("/info/network", response_model=NetworkResponse)
+@app.get("/info/network", response_model=NetworkResponse, tags=["Kaspa network info"])
 async def get_network():
     """
     Get some global kaspa network information

@@ -12,7 +12,7 @@ class KaspadInfoResponse(BaseModel):
     isSynced: bool = True
 
 
-@app.get("/info/kaspad", response_model=KaspadInfoResponse)
+@app.get("/info/kaspad", response_model=KaspadInfoResponse, tags=["Kaspa network info"])
 async def get_kaspad_info():
     """
     Get some information for kaspad instance, which is currently connected.
