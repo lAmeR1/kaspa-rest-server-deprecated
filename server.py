@@ -2,6 +2,7 @@
 import os
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from kaspad.KaspadMultiClient import KaspadMultiClient
 
@@ -16,6 +17,17 @@ app = FastAPI(
         "name": "MIT LICENSE"
     }
 )
+
+origins = ["*"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 kaspad_hosts = []
 
