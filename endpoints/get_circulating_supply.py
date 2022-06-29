@@ -13,7 +13,7 @@ class CoinSupplyResponse(BaseModel):
 @app.get("/info/coinsupply", response_model=CoinSupplyResponse)
 async def get_coinsupply():
     """
-    Retrieves $KAS coin supply information
+    Get $KAS coin supply information
     """
     resp = kaspad_client.request("getCoinSupplyRequest")
     return {

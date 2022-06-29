@@ -21,7 +21,7 @@ class BlockdagResponse(BaseModel):
 @app.get("/info/blockdag", response_model=BlockdagResponse)
 async def get_blockdag():
     """
-    Retrieves some global kaspa BlockDAG information
+    Get some global Kaspa BlockDAG information
     """
     resp = kaspad_client.request("getBlockDagInfoRequest")
     return resp["getBlockDagInfoResponse"]

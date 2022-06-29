@@ -15,7 +15,7 @@ class KaspadInfoResponse(BaseModel):
 @app.get("/info/kaspad", response_model=KaspadInfoResponse)
 async def get_kaspad_info():
     """
-    Retrieves some kaspad information for kaspad instance, which is currently connected.
+    Get some information for kaspad instance, which is currently connected.
     """
     resp = kaspad_client.request("getInfoRequest")
     resp["getInfoResponse"].pop("p2pId")

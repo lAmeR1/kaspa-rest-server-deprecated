@@ -53,31 +53,31 @@ class BlockResponse(BaseModel):
     blocks: List[BlockModel] | None
 
 
-@app.get("/blocks/{block_id}", response_model=BlockModel)
-async def get_block(block_id: str = Path(regex="[a-f0-9]{64}")):
+@app.get("/blocks/{blockId}", response_model=BlockModel)
+async def get_block(blockId: str = Path(regex="[a-f0-9]{64}")):
     """
-    Retrieve information for a given block id
+    Get block information for a given block id
     """
     resp = kaspad_client.request("getBlockRequest",
                                  params={
-                                     "hash": block_id,
+                                     "hash": blockId,
                                      "includeTransactions": True
                                  })
 
     return resp["getBlockResponse"]["block"]
 
 @app.get("/blocks", response_model=BlockResponse)
-async def get_blocks(low_hash: str = Query(regex="[a-f0-9]{64}"),
-                     include_blocks: bool = False,
-                     include_transactions: bool = False):
+async def get_blocks(lowHash: str = Query(regex="[a-f0-9]{64}"),
+                     includeBlocks: bool = False,
+                     includeTransactions: bool = False):
     """
-    This function gets information about blocks beginning from lowHash block.
+    Lists block beginning from a low hash (block id)
     """
     resp = kaspad_client.request("getBlocksRequest",
                                  params={
-                                     "lowHash": low_hash,
-                                     "includeBlocks": include_blocks ,
-                                     "includeTransactions": include_transactions
+                                     "lowHash": lowHash,
+                                     "includeBlocks": includeBlocks ,
+                                     "includeTransactions": includeTransactions
                                  })
 
     return resp["getBlocksResponse"]

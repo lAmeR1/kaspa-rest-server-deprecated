@@ -29,15 +29,15 @@ class UtxoResponse(BaseModel):
     utxoEntry: UtxoModel
 
 
-@app.get("/addresses/{kaspa_address}/utxos", response_model=List[UtxoResponse])
-async def get_utxos_for_address(kaspa_address: str = Path(
-    description="Kaspa address as string e.g. kaspa:pzhh76qc82wzduvsrd9xh4zde9qhp0xc8rl7qu2mvl2e42uvdqt75zrcgpm00",
+@app.get("/addresses/{kaspaAddress}/utxos", response_model=List[UtxoResponse])
+async def get_utxos_for_address(kaspaAddress: str = Path(
+    description="Kaspa address as string e.g. kaspa:qqkqkzjvr7zwxxmjxjkmxxdwju9kjs6e9u82uh59z07vgaks6gg62v8707g73",
     regex="^kaspa\:[a-z0-9]{61}$")):
     """
-    This endpoint retrieves all open utxo for a given kaspa address
+    Lists all open utxo for a given kaspa address
     """
     resp = kaspad_client.request("getUtxosByAddressesRequest",
                                  params={
-                                     "addresses": [kaspa_address]
+                                     "addresses": [kaspaAddress]
                                  }, timeout=120)
-    return (utxo for utxo in resp["getUtxosByAddressesResponse"]["entries"] if utxo["address"] == kaspa_address)
+    return (utxo for utxo in resp["getUtxosByAddressesResponse"]["entries"] if utxo["address"] == kaspaAddress)
