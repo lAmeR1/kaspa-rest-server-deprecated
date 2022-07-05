@@ -13,6 +13,7 @@ from .messages_pb2 import KaspadMessage
 
 class KaspadCommunicationError(Exception): pass
 
+
 # pipenv run python -m grpc_tools.protoc -I./protos --python_out=. --grpc_python_out=. ./protos/rpc.proto ./protos/messages.proto ./protos/p2p.proto
 
 class KaspadThread(object):
@@ -26,16 +27,17 @@ class KaspadThread(object):
 
         self.__queue = SimpleQueue()
 
-        self.__thread = threading.Thread(target=self.__loop, daemon=True).start()
+        self.__thread = threading.Thread(target=self.__loop, daemon=True)
+        self.__thread.start()
         self.__closing = False
 
     def __enter__(self, *args):
         return self
 
     def __exit__(self, *args):
-        # return
         self.__closing = True
         self.channel.close()
+        self.__thread.join()
 
     def request(self, command, params=None, wait_for_response=True, timeout=5):
         if wait_for_response:
