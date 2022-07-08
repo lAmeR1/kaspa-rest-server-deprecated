@@ -36,7 +36,7 @@ async def get_utxos_for_address(kaspaAddress: str = Path(
     """
     Lists all open utxo for a given kaspa address
     """
-    resp = kaspad_client.request("getUtxosByAddressesRequest",
+    resp = await kaspad_client.request("getUtxosByAddressesRequest",
                                  params={
                                      "addresses": [kaspaAddress]
                                  }, timeout=120)

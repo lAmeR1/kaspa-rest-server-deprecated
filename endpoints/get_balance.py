@@ -17,7 +17,7 @@ async def get_balance_from_kaspa_address(
     """
     Get balance for a given kaspa address
     """
-    resp = kaspad_client.request("getBalanceByAddressRequest",
+    resp = await kaspad_client.request("getBalanceByAddressRequest",
                                  params={
                                      "address": kaspaAddress
                                  })

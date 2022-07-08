@@ -28,7 +28,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 kaspad_hosts = []
 
 for i in range(100):

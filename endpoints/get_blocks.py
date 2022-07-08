@@ -58,7 +58,7 @@ async def get_block(blockId: str = Path(regex="[a-f0-9]{64}")):
     """
     Get block information for a given block id
     """
-    resp = kaspad_client.request("getBlockRequest",
+    resp = await kaspad_client.request("getBlockRequest",
                                  params={
                                      "hash": blockId,
                                      "includeTransactions": True
@@ -73,7 +73,7 @@ async def get_blocks(lowHash: str = Query(regex="[a-f0-9]{64}"),
     """
     Lists block beginning from a low hash (block id)
     """
-    resp = kaspad_client.request("getBlocksRequest",
+    resp = await kaspad_client.request("getBlocksRequest",
                                  params={
                                      "lowHash": lowHash,
                                      "includeBlocks": includeBlocks ,

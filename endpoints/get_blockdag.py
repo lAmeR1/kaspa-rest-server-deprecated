@@ -23,5 +23,5 @@ async def get_blockdag():
     """
     Get some global Kaspa BlockDAG information
     """
-    resp = kaspad_client.request("getBlockDagInfoRequest")
+    resp = await kaspad_client.request("getBlockDagInfoRequest")
     return resp["getBlockDagInfoResponse"]

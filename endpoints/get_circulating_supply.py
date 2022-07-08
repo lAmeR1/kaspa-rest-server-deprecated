@@ -15,7 +15,7 @@ async def get_coinsupply():
     """
     Get $KAS coin supply information
     """
-    resp = kaspad_client.request("getCoinSupplyRequest")
+    resp = await kaspad_client.request("getCoinSupplyRequest")
     return {
         "circulatingSupply": resp["getCoinSupplyResponse"]["circulatingSompi"],
         "maxSupply": resp["getCoinSupplyResponse"]["maxSompi"]

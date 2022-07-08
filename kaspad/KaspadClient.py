@@ -10,9 +10,9 @@ class KaspadClient(object):
         self.kaspad_host = kaspad_host
         self.kaspad_port = kaspad_port
 
-    def request(self, command, params=None, timeout=5):
+    async def request(self, command, params=None, timeout=5):
         with KaspadThread(self.kaspad_host, self.kaspad_port) as t:
-            return t.request(command, params, wait_for_response=True, timeout=timeout)
+            return await t.request(command, params, wait_for_response=True, timeout=timeout)
 
     def notify(self, command, params, callback):
         t = KaspadThread(self.kaspad_host, self.kaspad_port)

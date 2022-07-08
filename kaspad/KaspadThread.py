@@ -1,7 +1,5 @@
 # encoding: utf-8
-import queue
-import threading
-from queue import Queue, SimpleQueue
+import asyncio
 
 import grpc
 from google.protobuf import json_format
@@ -18,17 +16,17 @@ class KaspadCommunicationError(Exception): pass
 
 class KaspadThread(object):
     def __init__(self, kaspad_host, kaspad_port):
-        # This is a sample Python script.
 
-        self.channel = grpc.insecure_channel(f'{kaspad_host}:{kaspad_port}')
+        self.kaspad_host = kaspad_host
+        self.kaspad_port = kaspad_port
+
+        self.channel = grpc.aio.insecure_channel(f'{kaspad_host}:{kaspad_port}')
         self.stub = messages_pb2_grpc.RPCStub(self.channel)
         self.on_new_response = Event()
         self.on_new_error = Event()
 
-        self.__queue = SimpleQueue()
+        self.__queue = asyncio.queues.Queue()
 
-        self.__thread = threading.Thread(target=self.__loop, daemon=True)
-        self.__thread.start()
         self.__closing = False
 
     def __enter__(self, *args):
@@ -36,49 +34,26 @@ class KaspadThread(object):
 
     def __exit__(self, *args):
         self.__closing = True
-        self.channel.close()
-        self.__thread.join()
 
-    def request(self, command, params=None, wait_for_response=True, timeout=5):
+    async def request(self, command, params=None, wait_for_response=True, timeout=5):
         if wait_for_response:
-            q = Queue()
+            async for resp in self.stub.MessageStream(self.yield_cmd(command, params), timeout=timeout):
+                self.__queue.put_nowait("done")
+                return json_format.MessageToDict(resp)
 
-            def listener(e):
-                q.put(e["resp"])
+            raise KaspadCommunicationError()
 
-            self.on_new_response += listener
-            self.__queue.put((command, params))
-            try:
-                resp = q.get(timeout=timeout)
-                self.on_new_response -= listener
-                return resp
-            except queue.Empty as e:
-                raise KaspadCommunicationError(str(e))
+    async def yield_cmd(self, cmd, params=None):
+        msg = KaspadMessage()
+        msg2 = getattr(msg, cmd)
+        payload = params
 
-        else:
-            self.__queue.put((command, params))
+        if payload:
+            if isinstance(payload, dict):
+                json_format.ParseDict(payload, msg2)
+            if isinstance(payload, str):
+                json_format.Parse(payload, msg2)
 
-    def __loop(self):
-        try:
-            for resp in self.stub.MessageStream(self.__inbox()):
-                resp = json_format.MessageToDict(resp)
-                self.on_new_response(resp=resp)
-        except Exception as e:
-            if not (self.__closing is True and '"grpc_message":"Channel closed!"' in str(e)):
-                self.on_new_error(error=e)
-
-    def __inbox(self):
-        while True:
-            msg = KaspadMessage()
-            cmd, params = self.__queue.get()
-            msg2 = getattr(msg, cmd)
-            payload = params
-
-            if payload:
-                if isinstance(payload, dict):
-                    json_format.ParseDict(payload, msg2)
-                if isinstance(payload, str):
-                    json_format.Parse(payload, msg2)
-
-            msg2.SetInParent()
-            yield msg
+        msg2.SetInParent()
+        yield msg
+        print("ready", await self.__queue.get())
