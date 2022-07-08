@@ -37,11 +37,12 @@ class KaspadThread(object):
 
     async def request(self, command, params=None, wait_for_response=True, timeout=5):
         if wait_for_response:
-            async for resp in self.stub.MessageStream(self.yield_cmd(command, params), timeout=timeout):
-                self.__queue.put_nowait("done")
-                return json_format.MessageToDict(resp)
-
-            raise KaspadCommunicationError()
+            try:
+                async for resp in self.stub.MessageStream(self.yield_cmd(command, params), timeout=timeout):
+                    self.__queue.put_nowait("done")
+                    return json_format.MessageToDict(resp)
+            except grpc.aio._call.AioRpcError as e:
+                raise KaspadCommunicationError(str(e))
 
     async def yield_cmd(self, cmd, params=None):
         msg = KaspadMessage()
@@ -56,4 +57,4 @@ class KaspadThread(object):
 
         msg2.SetInParent()
         yield msg
-        print("ready", await self.__queue.get())
+        await self.__queue.get()
