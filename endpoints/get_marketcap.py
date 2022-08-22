@@ -6,11 +6,11 @@ from pydantic import BaseModel
 from server import app, kaspad_client
 
 
-class CoinSupplyResponse(BaseModel):
+class MarketCapResponse(BaseModel):
     marketcap: int = 12000132
 
 
-@app.get("/info/marketcap", response_model=CoinSupplyResponse | str, tags=["Kaspa network info"])
+@app.get("/info/marketcap", response_model=MarketCapResponse | str, tags=["Kaspa network info"])
 async def get_marketcap(stringOnly: bool = False):
     """
     Get $KAS price and market cap. Price info is from coingecko.com
