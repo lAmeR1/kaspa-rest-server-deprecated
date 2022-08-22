@@ -1,9 +1,8 @@
 # encoding: utf-8
 
-import requests
 from pydantic import BaseModel
 
-from server import app, kaspad_client
+from server import app
 
 
 class HashrateResponse(BaseModel):
