@@ -4,9 +4,11 @@ import os
 
 from endpoints import get_balance, get_utxos, get_blocks, get_blockdag, get_circulating_supply, get_kaspad_info, \
     get_network
+from endpoints.get_marketcap import get_marketcap
 
 print(
-    f"Loaded: {get_balance}, {get_utxos}, {get_blocks}, {get_blockdag}, {get_circulating_supply}, {get_kaspad_info}, {get_network}")
+    f"Loaded: {get_balance}, {get_utxos}, {get_blocks}, {get_blockdag}, {get_circulating_supply}, "
+    f"{get_kaspad_info}, {get_network}, {get_marketcap}")
 
 from server import app
 
