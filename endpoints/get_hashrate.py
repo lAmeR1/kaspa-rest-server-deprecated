@@ -25,7 +25,7 @@ async def get_hashrate(stringOnly: bool = False):
         }
 
     else:
-        return f"{hashrate_in_th:.0f}"
+        return f"{hashrate_in_th:.01f}"
 
 
 def __normalize_hashrate(hashrate: int):
