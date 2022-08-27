@@ -1,5 +1,6 @@
 # encoding: utf-8
 import asyncio
+from queue import Queue
 
 import grpc
 from google.protobuf import json_format
@@ -15,12 +16,16 @@ class KaspadCommunicationError(Exception): pass
 # pipenv run python -m grpc_tools.protoc -I./protos --python_out=. --grpc_python_out=. ./protos/rpc.proto ./protos/messages.proto ./protos/p2p.proto
 
 class KaspadThread(object):
-    def __init__(self, kaspad_host, kaspad_port):
+    def __init__(self, kaspad_host, kaspad_port, async_thread=True):
 
         self.kaspad_host = kaspad_host
         self.kaspad_port = kaspad_port
 
-        self.channel = grpc.aio.insecure_channel(f'{kaspad_host}:{kaspad_port}')
+        if async_thread:
+            self.channel = grpc.aio.insecure_channel(f'{kaspad_host}:{kaspad_port}')
+        else:
+            self.channel = grpc.insecure_channel(f'{kaspad_host}:{kaspad_port}')
+            self.__sync_queue = Queue()
         self.stub = messages_pb2_grpc.RPCStub(self.channel)
         self.on_new_response = Event()
         self.on_new_error = Event()
@@ -44,6 +49,15 @@ class KaspadThread(object):
             except grpc.aio._call.AioRpcError as e:
                 raise KaspadCommunicationError(str(e))
 
+    def notify(self, command, params=None, callback_func=None, timeout=5):
+        try:
+            for resp in self.stub.MessageStream(self.yield_cmd_sync(command, params)):
+                self.__queue.put_nowait("done")
+                if callback_func:
+                    callback_func(json_format.MessageToDict(resp))
+        except grpc.aio._call.AioRpcError as e:
+            raise KaspadCommunicationError(str(e))
+
     async def yield_cmd(self, cmd, params=None):
         msg = KaspadMessage()
         msg2 = getattr(msg, cmd)
@@ -58,3 +72,18 @@ class KaspadThread(object):
         msg2.SetInParent()
         yield msg
         await self.__queue.get()
+
+    def yield_cmd_sync(self, cmd, params=None):
+        msg = KaspadMessage()
+        msg2 = getattr(msg, cmd)
+        payload = params
+
+        if payload:
+            if isinstance(payload, dict):
+                json_format.ParseDict(payload, msg2)
+            if isinstance(payload, str):
+                json_format.Parse(payload, msg2)
+
+        msg2.SetInParent()
+        yield msg
+        self.__sync_queue.get()

@@ -3,8 +3,12 @@ import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+import socketio
 
 from kaspad.KaspadMultiClient import KaspadMultiClient
+
+sio = socketio.AsyncServer(async_mode="asgi")
+socket_app = socketio.ASGIApp(sio)
 
 app = FastAPI(
     title="Kaspa REST-API server",
@@ -17,6 +21,8 @@ app = FastAPI(
         "name": "MIT LICENSE"
     }
 )
+
+app.mount("/", socket_app)
 
 origins = ["*"]
 
@@ -40,3 +46,8 @@ if not kaspad_hosts:
     raise Exception('Please set at least KASPAD_HOST_1 environment variable.')
 
 kaspad_client = KaspadMultiClient(kaspad_hosts)
+
+@sio.on("bb")
+async def blocks(sid, msg):
+    print("hier")
+    await sio.emit("new-block", "data", room="blocks")

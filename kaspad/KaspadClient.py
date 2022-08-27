@@ -1,4 +1,6 @@
 # encoding: utf-8
+import threading
+from functools import partial
 
 from kaspad.KaspadThread import KaspadThread
 
@@ -15,6 +17,7 @@ class KaspadClient(object):
             return await t.request(command, params, wait_for_response=True, timeout=timeout)
 
     def notify(self, command, params, callback):
-        t = KaspadThread(self.kaspad_host, self.kaspad_port)
+        t = KaspadThread(self.kaspad_host, self.kaspad_port, async_thread=False)
         t.on_new_response += callback
-        t.request(command, params, wait_for_response=False)
+        thread = threading.Thread(target=partial(t.notify, command, params, callback))
+        thread.start()
