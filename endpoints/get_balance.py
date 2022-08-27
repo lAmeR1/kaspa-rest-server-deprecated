@@ -9,6 +9,7 @@ class BalanceResponse(BaseModel):
     address: str = "kaspa:pzhh76qc82wzduvsrd9xh4zde9qhp0xc8rl7qu2mvl2e42uvdqt75zrcgpm00"
     balance: int = 38240000000
 
+
 @app.get("/addresses/{kaspaAddress}/balance", response_model=BalanceResponse, tags=["Kaspa addresses"])
 async def get_balance_from_kaspa_address(
         kaspaAddress: str = Path(
@@ -18,10 +19,19 @@ async def get_balance_from_kaspa_address(
     Get balance for a given kaspa address
     """
     resp = await kaspad_client.request("getBalanceByAddressRequest",
-                                 params={
-                                     "address": kaspaAddress
-                                 })
+                                       params={
+                                           "address": kaspaAddress
+                                       })
+    resp = resp["getBalanceByAddressResponse"]
+
+    try:
+        balance = int(resp["balance"])
+
+    # return 0 if address is ok, but no utxos there
+    except KeyError:
+        balance = 0
+
     return {
         "address": kaspaAddress,
-        "balance": int(resp["getBalanceByAddressResponse"]["balance"])
+        "balance": balance
     }
