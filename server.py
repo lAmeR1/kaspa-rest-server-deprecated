@@ -7,7 +7,7 @@ import socketio
 
 from kaspad.KaspadMultiClient import KaspadMultiClient
 
-sio = socketio.AsyncServer(async_mode="asgi")
+sio = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins=[])
 socket_app = socketio.ASGIApp(sio)
 
 app = FastAPI(
@@ -22,7 +22,8 @@ app = FastAPI(
     }
 )
 
-app.mount("/", socket_app)
+
+app.mount("/ws", socket_app)
 
 origins = ["*"]
 
@@ -47,7 +48,3 @@ if not kaspad_hosts:
 
 kaspad_client = KaspadMultiClient(kaspad_hosts)
 
-@sio.on("bb")
-async def blocks(sid, msg):
-    print("hier")
-    await sio.emit("new-block", "data", room="blocks")

@@ -3,9 +3,9 @@
 from server import sio
 
 
-@sio.on("connect")
-async def connect(sid, env):
-    print("on connect", sid, env)
+# @sio.on("connect")
+# async def connect(sid, env):
+#     print("on connect", sid, env)
 
 
 @sio.on("join-room")
