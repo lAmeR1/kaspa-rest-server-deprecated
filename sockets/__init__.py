@@ -2,13 +2,10 @@
 
 from server import sio
 
-
-# @sio.on("connect")
-# async def connect(sid, env):
-#     print("on connect", sid, env)
+VALID_ROOMS = ["blocks"]
 
 
 @sio.on("join-room")
 async def join_room(sid, room_name):
-    sio.enter_room(sid, room_name)
-    print(f"{sid} joined room {room_name}")
+    if room_name in VALID_ROOMS:
+        sio.enter_room(sid, room_name)

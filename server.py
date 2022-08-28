@@ -1,9 +1,9 @@
 # encoding: utf-8
 import os
 
+import socketio
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import socketio
 
 from kaspad.KaspadMultiClient import KaspadMultiClient
 
@@ -21,7 +21,6 @@ app = FastAPI(
         "name": "MIT LICENSE"
     }
 )
-
 
 app.mount("/ws", socket_app)
 
@@ -47,4 +46,3 @@ if not kaspad_hosts:
     raise Exception('Please set at least KASPAD_HOST_1 environment variable.')
 
 kaspad_client = KaspadMultiClient(kaspad_hosts)
-

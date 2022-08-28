@@ -23,4 +23,4 @@ def config():
 
 @sio.on("last-blocks")
 async def get_last_blocks(sid, msg):
-    await sio.emit("last-blocks", BLOCKS_CACHE[-20:], to=sid)
+    await sio.emit("last-blocks", BLOCKS_CACHE, to=sid)
