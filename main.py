@@ -23,7 +23,6 @@ from server import app
 
 # find kaspad before staring webserver
 asyncio.run(get_network.get_network())
-print("LETS GO")
 config()
 
 if __name__ == '__main__':
