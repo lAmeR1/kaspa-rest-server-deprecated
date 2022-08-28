@@ -8,16 +8,14 @@ from endpoints import get_balance, get_utxos, get_blocks, get_blockdag, get_circ
 from endpoints.get_blockreward import get_blockreward
 from endpoints.get_hashrate import get_hashrate
 from endpoints.get_marketcap import get_marketcap
-from sockets.blockdag import emit_blockdag
+from sockets.blockdag import periodical_blockdag
 from sockets.blocks import config
-from sockets.coinsupply import emit_coin_supply
-
-
+from sockets.coinsupply import periodic_coin_supply
 
 print(
     f"Loaded: {get_balance}, {get_utxos}, {get_blocks}, {get_blockdag}, {get_circulating_supply}, "
     f"{get_kaspad_info}, {get_network}, {get_marketcap}, {get_hashrate}, {get_blockreward}, {sockets.join_room}"
-    f"{emit_coin_supply} {emit_blockdag}")
+    f"{periodic_coin_supply} {periodical_blockdag}")
 
 from server import app
 
