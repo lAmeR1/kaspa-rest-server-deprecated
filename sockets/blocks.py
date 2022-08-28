@@ -8,8 +8,10 @@ BLOCKS_CACHE = []
 def config():
 
     def on_new_block(e):
+        print("new block event")
         try:
             block_info = e["blockAddedNotification"]["block"]
+            print(f"adding new block: {block_info}")
         except KeyError:
             return
 
