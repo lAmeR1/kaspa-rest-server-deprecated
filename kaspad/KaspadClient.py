@@ -21,3 +21,17 @@ class KaspadClient(object):
         t.on_new_response += callback
         thread = threading.Thread(target=partial(t.notify, command, params, callback))
         thread.start()
+        return thread
+
+
+class ExcThread(threading.Thread):
+
+    def __init__(self, bucket):
+        threading.Thread.__init__(self)
+        self.bucket = bucket
+
+    def run(self):
+        try:
+            raise Exception('An error occured here.')
+        except Exception:
+            self.bucket.put(sys.exc_info())

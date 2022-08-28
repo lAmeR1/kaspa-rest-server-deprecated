@@ -18,9 +18,17 @@ class KaspadMultiClient(object):
             with suppress(KaspadCommunicationError):
                 print(f"checking: {k.kaspad_host}:{k.kaspad_port}")
 
-                k.notify("notifyUtxosChangedRequest", {
+                n_thread = k.notify("notifyUtxosChangedRequest", {
                     "addresses": ['kaspa:qqce9s7850m0afeq075uuh5mas72456tazcs8nrc76thrdj3qdaecnynykehv']},
-                         lambda x: print(f"test: {x}"))
+                                    lambda x: print(f"test: {x}"))
+
+                # wait 2 secs for possible error..
+                await asyncio.sleep(2)
+
+                if not n_thread.is_alive():
+                    print("thread is not alive anymore")
+                    continue
+
                 resp = await k.request("getInfoRequest", timeout=2)
                 if resp["getInfoResponse"]["p2pId"] and resp["getInfoResponse"].get("isUtxoIndexed", False):
                     print(f"found kaspad {k.kaspad_host}:{k.kaspad_port}")
@@ -42,5 +50,8 @@ class KaspadMultiClient(object):
     def notify(self, command, params, callback):
         if not self.__default_kaspad:
             asyncio.run(self.new_default_kaspad())
-
-        return self.kaspads[0].notify(command, params, callback)
+        try:
+            return self.__default_kaspad.notify(command, params, callback)
+        except KaspadCommunicationError:
+            asyncio.run(self.new_default_kaspad())
+            return self.__default_kaspad.notify(command, params, callback)
