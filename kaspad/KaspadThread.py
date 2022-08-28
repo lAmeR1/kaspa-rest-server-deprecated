@@ -8,6 +8,7 @@ from google.protobuf import json_format
 from helper.Event import Event
 from . import messages_pb2_grpc
 from .messages_pb2 import KaspadMessage
+from grpc._channel import _MultiThreadedRendezvous
 
 
 class KaspadCommunicationError(Exception): pass
@@ -55,7 +56,7 @@ class KaspadThread(object):
                 self.__queue.put_nowait("done")
                 if callback_func:
                     callback_func(json_format.MessageToDict(resp))
-        except grpc.aio._call.AioRpcError as e:
+        except (grpc.aio._call.AioRpcError, _MultiThreadedRendezvous) as e:
             raise KaspadCommunicationError(str(e))
 
     async def yield_cmd(self, cmd, params=None):

@@ -13,4 +13,5 @@ BLOCKS_CACHE = []
 @repeat_every(seconds=5)
 async def emit_blockdag():
     resp = await get_blockdag()
+    print(resp)
     await sio.emit("blockdag", resp, room="blockdag")

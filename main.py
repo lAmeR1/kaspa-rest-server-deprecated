@@ -12,7 +12,7 @@ from sockets.blockdag import emit_blockdag
 from sockets.blocks import config
 from sockets.coinsupply import emit_coin_supply
 
-config()
+
 
 print(
     f"Loaded: {get_balance}, {get_utxos}, {get_blocks}, {get_blockdag}, {get_circulating_supply}, "
@@ -20,6 +20,11 @@ print(
     f"{emit_coin_supply} {emit_blockdag}")
 
 from server import app
+
+# find kaspad before staring webserver
+asyncio.run(get_network.get_network())
+
+config()
 
 if __name__ == '__main__':
     if os.getenv("DEBUG"):
