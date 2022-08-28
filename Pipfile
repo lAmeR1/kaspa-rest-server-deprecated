@@ -12,6 +12,7 @@ gunicorn = "*"
 requests = "*"
 websockets = "*"
 fastapi-utils = "*"
+python-socketio = "*"
 
 [requires]
 python_version = "3.10"
