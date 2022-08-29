@@ -12,7 +12,6 @@ BLOCKS_CACHE = []
 @app.on_event("startup")
 @repeat_every(seconds=5)
 async def periodical_blockdag():
-    print(threading.current_thread().ident)
     await emit_blockdag()
 
 
