@@ -2,6 +2,8 @@
 import asyncio
 import os
 
+from starlette.responses import RedirectResponse
+
 import sockets
 from endpoints import get_balance, get_utxos, get_blocks, get_blockdag, get_circulating_supply, get_kaspad_info, \
     get_network
@@ -22,6 +24,12 @@ from server import app
 # find kaspad before staring webserver
 asyncio.run(get_network.get_network())
 config()
+
+
+@app.get("/", include_in_schema=False)
+async def docs_redirect():
+    return RedirectResponse(url='/docs')
+
 
 if __name__ == '__main__':
     if os.getenv("DEBUG"):
