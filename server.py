@@ -4,6 +4,7 @@ import os
 import socketio
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.responses import PlainTextResponse
 
 from kaspad.KaspadMultiClient import KaspadMultiClient
 
@@ -33,6 +34,16 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.get("/ping", include_in_schema=False,
+         response_class=PlainTextResponse)
+async def get_circulating_coins(in_billion: bool = False):
+    """
+    Ping Pong
+    """
+    return "pong"
+
 
 kaspad_hosts = []
 
