@@ -1,8 +1,8 @@
 # encoding: utf-8
 import threading
-from functools import partial
+import time
 
-from kaspad.KaspadThread import KaspadThread
+from kaspad.KaspadThread import KaspadThread, KaspadCommunicationError
 
 
 # pipenv run python -m grpc_tools.protoc -I./protos --python_out=. --grpc_python_out=. ./protos/rpc.proto ./protos/messages.proto ./protos/p2p.proto
@@ -19,19 +19,15 @@ class KaspadClient(object):
     def notify(self, command, params, callback):
         t = KaspadThread(self.kaspad_host, self.kaspad_port, async_thread=False)
         t.on_new_response += callback
-        thread = threading.Thread(target=partial(t.notify, command, params, callback))
+
+        def notify_loop():
+            while True:
+                try:
+                    t.notify(command, params, callback)
+                except KaspadCommunicationError:
+                    print("Notify broken. Retry.")
+                    time.sleep(1)
+
+        thread = threading.Thread(target=notify_loop)
         thread.start()
         return thread
-
-
-class ExcThread(threading.Thread):
-
-    def __init__(self, bucket):
-        threading.Thread.__init__(self)
-        self.bucket = bucket
-
-    def run(self):
-        try:
-            raise Exception('An error occured here.')
-        except Exception:
-            self.bucket.put(sys.exc_info())
