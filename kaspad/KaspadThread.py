@@ -4,11 +4,10 @@ from queue import Queue
 
 import grpc
 from google.protobuf import json_format
+from grpc._channel import _MultiThreadedRendezvous
 
-from helper.Event import Event
 from . import messages_pb2_grpc
 from .messages_pb2 import KaspadMessage
-from grpc._channel import _MultiThreadedRendezvous
 
 
 class KaspadCommunicationError(Exception): pass
@@ -28,8 +27,6 @@ class KaspadThread(object):
             self.channel = grpc.insecure_channel(f'{kaspad_host}:{kaspad_port}')
             self.__sync_queue = Queue()
         self.stub = messages_pb2_grpc.RPCStub(self.channel)
-        self.on_new_response = Event()
-        self.on_new_error = Event()
 
         self.__queue = asyncio.queues.Queue()
 
@@ -50,12 +47,15 @@ class KaspadThread(object):
             except grpc.aio._call.AioRpcError as e:
                 raise KaspadCommunicationError(str(e))
 
-    def notify(self, command, params=None, callback_func=None, timeout=5):
+    async def notify(self, command, params=None, callback_func=None):
         try:
-            for resp in self.stub.MessageStream(self.yield_cmd_sync(command, params)):
-                self.__queue.put_nowait("done")
+            async for resp in self.stub.MessageStream(self.yield_cmd(command, params)):
+                # self.__queue.put_nowait("done")
                 if callback_func:
-                    callback_func(json_format.MessageToDict(resp))
+                    await callback_func(json_format.MessageToDict(resp))
+
+            print("loop done...")
+
         except (grpc.aio._call.AioRpcError, _MultiThreadedRendezvous) as e:
             raise KaspadCommunicationError(str(e))
 

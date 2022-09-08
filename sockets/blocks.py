@@ -4,10 +4,11 @@ import asyncio
 from server import kaspad_client, sio
 
 BLOCKS_CACHE = []
+TASKS = []
 
 
-def config():
-    def on_new_block(e):
+async def config():
+    async def on_new_block(e):
         try:
             block_info = e["blockAddedNotification"]["block"]
         except KeyError:
@@ -18,9 +19,10 @@ def config():
         if len(BLOCKS_CACHE) > 50:
             BLOCKS_CACHE.pop(0)
 
-        asyncio.run(sio.emit("new-block", block_info, room="blocks"))
+        await sio.emit("new-block", block_info, room="blocks")
 
-    kaspad_client.notify("notifyBlockAddedRequest", None, on_new_block)
+    await kaspad_client.notify("notifyBlockAddedRequest", None, on_new_block)
+
 
 
 @sio.on("last-blocks")
