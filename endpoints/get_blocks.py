@@ -1,8 +1,7 @@
 # encoding: utf-8
-
 from typing import List
 
-from fastapi import Query, Path
+from fastapi import Query, Path, HTTPException
 from pydantic import BaseModel
 
 from server import app, kaspad_client
@@ -65,8 +64,10 @@ async def get_block(blockId: str = Path(regex="[a-f0-9]{64}")):
                                            "hash": blockId,
                                            "includeTransactions": True
                                        })
-
-    return resp["getBlockResponse"]["block"]
+    try:
+        return resp["getBlockResponse"]["block"]
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Block not found")
 
 
 @app.get("/blocks", response_model=BlockResponse, tags=["Kaspa blocks"])
