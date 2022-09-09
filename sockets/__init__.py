@@ -13,7 +13,7 @@ async def join_room(sid, room_name):
         print(f"{sid} joining {room_name}")
         sio.enter_room(sid, room_name)
 
-        if room_name == "blocks":
+        if room_name == "blockdag":
             await emit_blockdag()
 
         if room_name == "coinsupply":
