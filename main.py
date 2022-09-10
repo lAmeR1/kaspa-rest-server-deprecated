@@ -10,6 +10,7 @@ import sockets
 from endpoints import get_balance, get_utxos, get_blocks, get_blockdag, get_circulating_supply, get_kaspad_info, \
     get_network
 from endpoints.get_blockreward import get_blockreward
+from endpoints.get_halving import get_halving
 from endpoints.get_hashrate import get_hashrate
 from endpoints.get_marketcap import get_marketcap
 from sockets import blocks
@@ -19,7 +20,7 @@ from sockets.coinsupply import periodic_coin_supply
 print(
     f"Loaded: {get_balance}, {get_utxos}, {get_blocks}, {get_blockdag}, {get_circulating_supply}, "
     f"{get_kaspad_info}, {get_network}, {get_marketcap}, {get_hashrate}, {get_blockreward}, {sockets.join_room}"
-    f"{periodic_coin_supply} {periodical_blockdag}")
+    f"{periodic_coin_supply} {periodical_blockdag} {get_halving}")
 
 from server import app, kaspad_client
 
