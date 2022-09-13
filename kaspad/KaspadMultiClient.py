@@ -12,7 +12,7 @@ class KaspadMultiClient(object):
 
     def __get_kaspad(self):
         for k in self.kaspads:
-            if k.isUtxoIndexed is True:
+            if k.isUtxoIndexed and k.isSynced:
                 return k
 
     async def initialize_all(self):
