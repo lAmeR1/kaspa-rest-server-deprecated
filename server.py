@@ -1,10 +1,12 @@
 # encoding: utf-8
 import os
+import traceback
 
 import socketio
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from starlette.responses import PlainTextResponse
+from starlette.requests import Request
+from starlette.responses import PlainTextResponse, JSONResponse
 
 from kaspad.KaspadMultiClient import KaspadMultiClient
 from fastapi.middleware.gzip import GZipMiddleware
@@ -60,3 +62,13 @@ if not kaspad_hosts:
     raise Exception('Please set at least KASPAD_HOST_1 environment variable.')
 
 kaspad_client = KaspadMultiClient(kaspad_hosts)
+
+@app.exception_handler(Exception)
+async def unicorn_exception_handler(request: Request, exc: Exception):
+    await kaspad_client.initialize_all()
+    return JSONResponse(
+        status_code=500,
+        content={"message": "Internal server error"
+                 # "traceback": f"{traceback.format_exception(exc)}"
+                 },
+    )

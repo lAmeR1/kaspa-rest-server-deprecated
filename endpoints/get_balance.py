@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-from fastapi import Path
+from fastapi import Path, HTTPException
 from pydantic import BaseModel
 from server import app, kaspad_client
 
@@ -22,7 +22,14 @@ async def get_balance_from_kaspa_address(
                                        params={
                                            "address": kaspaAddress
                                        })
-    resp = resp["getBalanceByAddressResponse"]
+
+    try:
+        resp = resp["getBalanceByAddressResponse"]
+    except KeyError:
+        if "getUtxosByAddressesResponse" in resp and "error" in resp["getUtxosByAddressesResponse"]:
+            raise HTTPException(status_code=400, detail=resp["getUtxosByAddressesResponse"]["error"])
+        else:
+            raise
 
     try:
         balance = int(resp["balance"])

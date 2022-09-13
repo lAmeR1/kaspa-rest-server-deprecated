@@ -16,6 +16,7 @@ class KaspadMultiClient(object):
                 return k
 
     async def initialize_all(self):
+        print("Initialize all kaspads.")
         tasks = [asyncio.create_task(k.ping()) for k in self.kaspads]
 
         for t in tasks:

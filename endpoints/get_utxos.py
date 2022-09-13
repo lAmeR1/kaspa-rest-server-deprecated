@@ -2,7 +2,7 @@
 
 from typing import List
 
-from fastapi import Path
+from fastapi import Path, HTTPException
 from pydantic import BaseModel
 
 from server import app, kaspad_client
@@ -37,7 +37,12 @@ async def get_utxos_for_address(kaspaAddress: str = Path(
     Lists all open utxo for a given kaspa address
     """
     resp = await kaspad_client.request("getUtxosByAddressesRequest",
-                                 params={
-                                     "addresses": [kaspaAddress]
-                                 }, timeout=120)
-    return (utxo for utxo in resp["getUtxosByAddressesResponse"]["entries"] if utxo["address"] == kaspaAddress)
+                                       params={
+                                           "addresses": [kaspaAddress]
+                                       }, timeout=120)
+    try:
+        return (utxo for utxo in resp["getUtxosByAddressesResponse"]["entries"] if utxo["address"] == kaspaAddress)
+    except KeyError:
+        if "getUtxosByAddressesResponse" in resp and "error" in resp["getUtxosByAddressesResponse"]:
+            raise HTTPException(status_code=400, detail=resp["getUtxosByAddressesResponse"]["error"])
+        raise
