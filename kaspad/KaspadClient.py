@@ -9,18 +9,18 @@ class KaspadClient(object):
     def __init__(self, kaspad_host, kaspad_port):
         self.kaspad_host = kaspad_host
         self.kaspad_port = kaspad_port
-        self.serverVersion = None
-        self.isUtxoIndexed = None
-        self.isSynced = None
-        self.p2pId = None
+        self.server_version = None
+        self.is_utxo_indexed = None
+        self.is_synced = None
+        self.p2p_id = None
 
     async def ping(self):
         try:
             info = await self.request("getInfoRequest")
-            self.serverVersion = info["getInfoResponse"]["serverVersion"]
-            self.isUtxoIndexed = info["getInfoResponse"]["isUtxoIndexed"]
-            self.isSynced = info["getInfoResponse"]["isSynced"]
-            self.p2pId = info["getInfoResponse"]["p2pId"]
+            self.server_version = info["getInfoResponse"]["serverVersion"]
+            self.is_utxo_indexed = info["getInfoResponse"]["isUtxoIndexed"]
+            self.is_synced = info["getInfoResponse"]["isSynced"]
+            self.p2p_id = info["getInfoResponse"]["p2pId"]
             return info
 
         except Exception as exc:

@@ -12,11 +12,10 @@ class KaspadMultiClient(object):
 
     def __get_kaspad(self):
         for k in self.kaspads:
-            if k.isUtxoIndexed and k.isSynced:
+            if k.is_utxo_indexed and k.is_synced:
                 return k
 
     async def initialize_all(self):
-        print("Initialize all kaspads.")
         tasks = [asyncio.create_task(k.ping()) for k in self.kaspads]
 
         for t in tasks:

@@ -5,6 +5,7 @@ import traceback
 import socketio
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi_utils.tasks import repeat_every
 from starlette.requests import Request
 from starlette.responses import PlainTextResponse, JSONResponse
 
@@ -72,3 +73,8 @@ async def unicorn_exception_handler(request: Request, exc: Exception):
                  # "traceback": f"{traceback.format_exception(exc)}"
                  },
     )
+
+@app.on_event("startup")
+@repeat_every(seconds=60)
+async def periodical_blockdag():
+    await kaspad_client.initialize_all()
