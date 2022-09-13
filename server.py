@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import PlainTextResponse
 
 from kaspad.KaspadMultiClient import KaspadMultiClient
+from fastapi.middleware.gzip import GZipMiddleware
 
 sio = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins=[])
 socket_app = socketio.ASGIApp(sio)
@@ -22,6 +23,8 @@ app = FastAPI(
         "name": "MIT LICENSE"
     }
 )
+
+app.add_middleware(GZipMiddleware, minimum_size=500)
 
 app.mount("/ws", socket_app)
 
