@@ -53,7 +53,7 @@ class TxModel(BaseModel):
 
 
 class TxSearch(BaseModel):
-    transacionIds: List[str]
+    transactionIds: List[str]
 
 
 @app.get("/transactions/{transactionId}",
