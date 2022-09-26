@@ -10,6 +10,9 @@ from . import messages_pb2_grpc
 from .messages_pb2 import KaspadMessage
 
 
+MAX_MESSAGE_LENGTH = 1024 * 1024 * 1024  # 1GB
+
+
 class KaspadCommunicationError(Exception): pass
 
 
@@ -22,9 +25,19 @@ class KaspadThread(object):
         self.kaspad_port = kaspad_port
 
         if async_thread:
-            self.channel = grpc.aio.insecure_channel(f'{kaspad_host}:{kaspad_port}')
+            self.channel = grpc.aio.insecure_channel(f'{kaspad_host}:{kaspad_port}',
+                                                     compression=grpc.Compression.Gzip,
+                                                     options=[
+                                                         ('grpc.max_send_message_length', MAX_MESSAGE_LENGTH),
+                                                         ('grpc.max_receive_message_length', MAX_MESSAGE_LENGTH),
+                                                     ])
         else:
-            self.channel = grpc.insecure_channel(f'{kaspad_host}:{kaspad_port}')
+            self.channel = grpc.insecure_channel(f'{kaspad_host}:{kaspad_port}',
+                                                 compression=grpc.Compression.Gzip,
+                                                 options=[
+                                                     ('grpc.max_send_message_length', MAX_MESSAGE_LENGTH),
+                                                     ('grpc.max_receive_message_length', MAX_MESSAGE_LENGTH),
+                                                 ])
             self.__sync_queue = Queue()
         self.stub = messages_pb2_grpc.RPCStub(self.channel)
 
@@ -38,10 +51,10 @@ class KaspadThread(object):
     def __exit__(self, *args):
         self.__closing = True
 
-    async def request(self, command, params=None, wait_for_response=True, timeout=5):
+    async def request(self, command, params=None, wait_for_response=True, timeout=120):
         if wait_for_response:
             try:
-                async for resp in self.stub.MessageStream(self.yield_cmd(command, params), timeout=timeout):
+                async for resp in self.stub.MessageStream(self.yield_cmd(command, params), timeout=120):
                     self.__queue.put_nowait("done")
                     return json_format.MessageToDict(resp)
             except grpc.aio._call.AioRpcError as e:

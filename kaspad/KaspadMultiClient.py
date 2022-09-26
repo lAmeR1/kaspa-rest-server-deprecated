@@ -30,3 +30,19 @@ class KaspadMultiClient(object):
 
     async def notify(self, command, params, callback):
         return await self.__get_kaspad().notify(command, params, callback)
+
+if __name__ == '__main__':
+    k = KaspadMultiClient(["159.69.241.25:16110"])
+    asyncio.run(k.initialize_all())
+
+    d = asyncio.run(k.request("getVirtualSelectedParentChainFromBlockRequest",
+                                {"startHash": "79e2c388f19cb4baeeff48ca6e022e7d4b1e942aabca5147a430f9ae8683e291",
+                                  "includeAcceptedTransactionIds": True}))
+    # d = asyncio.run(k.request("getVirtualSelectedParentBlueScoreRequest",
+    #                             {}))
+
+    print(d)
+
+    import json
+    with open(r"C:\temp\chain.txt", "w") as f:
+        json.dump(d, f)
