@@ -115,12 +115,12 @@ async def search_for_transactions(txSearch: TxSearch,
     Get block information for a given block id
     """
     with session_maker() as s:
-        tx_list = s.query(Transaction).filter(Transaction.transaction_id.in_(txSearch.transacionIds)).all()
+        tx_list = s.query(Transaction).filter(Transaction.transaction_id.in_(txSearch.transactionIds)).all()
         tx_inputs = s.query(TransactionInput) \
-            .filter(TransactionInput.transaction_id.in_(txSearch.transacionIds)) \
+            .filter(TransactionInput.transaction_id.in_(txSearch.transactionIds)) \
             .all()
         tx_outputs = s.query(TransactionOutput) \
-            .filter(TransactionOutput.transaction_id.in_(txSearch.transacionIds)) \
+            .filter(TransactionOutput.transaction_id.in_(txSearch.transactionIds)) \
             .all()
 
     return ({
