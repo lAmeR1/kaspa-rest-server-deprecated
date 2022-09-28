@@ -5,6 +5,7 @@ from fastapi import Path, HTTPException
 from pydantic import BaseModel, parse_obj_as
 
 from dbsession import session_maker
+from models.Block import Block
 from models.Transaction import Transaction, TransactionOutput, TransactionInput
 from server import app
 
@@ -45,6 +46,7 @@ class TxModel(BaseModel):
     block_time: int
     is_accepted: bool
     accepted_block_hash: str | None
+    accepted_block_blue_score: int | None
     inputs: List[TxInput] | None
     outputs: List[TxOutput] | None
 
@@ -68,8 +70,8 @@ async def get_transaction(transactionId: str = Path(regex="[a-f0-9]{64}"),
     Get block information for a given block id
     """
     with session_maker() as s:
-        tx = s.query(Transaction) \
-            .join(TransactionOutput) \
+        tx = s.query(Transaction, Block.blue_score) \
+            .join(Block, Transaction.accepted_block_hash == Block.hash) \
             .filter(Transaction.transaction_id == transactionId) \
             .first()
 
@@ -88,14 +90,15 @@ async def get_transaction(transactionId: str = Path(regex="[a-f0-9]{64}"),
 
     if tx:
         return {
-            "subnetwork_id": tx.subnetwork_id,
-            "transaction_id": tx.transaction_id,
-            "hash": tx.hash,
-            "mass": tx.mass,
-            "block_hash": tx.block_hash,
-            "block_time": tx.block_time,
-            "is_accepted": tx.is_accepted,
-            "accepted_block_hash": tx.accepted_block_hash,
+            "subnetwork_id": tx.Transaction.subnetwork_id,
+            "transaction_id": tx.Transaction.transaction_id,
+            "hash": tx.Transaction.hash,
+            "mass": tx.Transaction.mass,
+            "block_hash": tx.Transaction.block_hash,
+            "block_time": tx.Transaction.block_time,
+            "is_accepted": tx.Transaction.is_accepted,
+            "accepted_block_hash": tx.Transaction.accepted_block_hash,
+            "accepted_block_blue_score": tx.blue_score,
             "outputs": parse_obj_as(List[TxOutput], tx_outputs) if tx_outputs else None,
             "inputs": parse_obj_as(List[TxInput], tx_inputs) if tx_inputs else None
         }
@@ -115,7 +118,7 @@ async def search_for_transactions(txSearch: TxSearch,
     Get block information for a given block id
     """
     with session_maker() as s:
-        tx_list = s.query(Transaction).filter(Transaction.transaction_id.in_(txSearch.transactionIds)).all()
+        tx_list = s.query(Transaction, Block.blue_score).join(Block, Transaction.accepted_block_hash == Block.hash).filter(Transaction.transaction_id.in_(txSearch.transactionIds)).all()
         tx_inputs = s.query(TransactionInput) \
             .filter(TransactionInput.transaction_id.in_(txSearch.transactionIds)) \
             .all()
@@ -124,14 +127,15 @@ async def search_for_transactions(txSearch: TxSearch,
             .all()
 
     return ({
-        "subnetwork_id": tx.subnetwork_id,
-        "transaction_id": tx.transaction_id,
-        "hash": tx.hash,
-        "mass": tx.mass,
-        "block_hash": tx.block_hash,
-        "block_time": tx.block_time,
-        "is_accepted": tx.is_accepted,
-        "accepted_block_hash": tx.accepted_block_hash,
-        "outputs": parse_obj_as(List[TxOutput], [x for x in tx_outputs if x.transaction_id == tx.transaction_id]),
-        "inputs": parse_obj_as(List[TxInput], [x for x in tx_inputs if x.transaction_id == tx.transaction_id])
+        "subnetwork_id": tx.Transaction.subnetwork_id,
+        "transaction_id": tx.Transaction.transaction_id,
+        "hash": tx.Transaction.hash,
+        "mass": tx.Transaction.mass,
+        "block_hash": tx.Transaction.block_hash,
+        "block_time": tx.Transaction.block_time,
+        "is_accepted": tx.Transaction.is_accepted,
+        "accepted_block_hash": tx.Transaction.accepted_block_hash,
+        "accepted_block_blue_score": tx.blue_score,
+        "outputs": parse_obj_as(List[TxOutput], [x for x in tx_outputs if x.transaction_id == tx.Transaction.transaction_id]),
+        "inputs": parse_obj_as(List[TxInput], [x for x in tx_inputs if x.transaction_id == tx.Transaction.transaction_id])
     } for tx in tx_list)
