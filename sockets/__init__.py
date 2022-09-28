@@ -2,6 +2,7 @@
 
 from server import sio
 from sockets.blockdag import emit_blockdag
+from sockets.bluescore import emit_bluescore
 from sockets.coinsupply import emit_coin_supply
 
 VALID_ROOMS = ["blocks", "coinsupply", "blockdag"]
@@ -18,3 +19,7 @@ async def join_room(sid, room_name):
 
         if room_name == "coinsupply":
             await emit_coin_supply()
+
+        if room_name == "bluescore":
+            await emit_bluescore()
+
