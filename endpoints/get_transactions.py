@@ -71,7 +71,7 @@ async def get_transaction(transactionId: str = Path(regex="[a-f0-9]{64}"),
     """
     with session_maker() as s:
         tx = s.query(Transaction, Block.blue_score) \
-            .join(Block, Transaction.accepted_block_hash == Block.hash) \
+            .join(Block, Transaction.accepted_block_hash == Block.hash, isouter=True) \
             .filter(Transaction.transaction_id == transactionId) \
             .first()
 
