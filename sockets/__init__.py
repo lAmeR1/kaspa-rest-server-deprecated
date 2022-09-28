@@ -5,7 +5,7 @@ from sockets.blockdag import emit_blockdag
 from sockets.bluescore import emit_bluescore
 from sockets.coinsupply import emit_coin_supply
 
-VALID_ROOMS = ["blocks", "coinsupply", "blockdag"]
+VALID_ROOMS = ["blocks", "coinsupply", "blockdag", "bluescore"]
 
 
 @sio.on("join-room")
