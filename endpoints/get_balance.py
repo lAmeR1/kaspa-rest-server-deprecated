@@ -2,6 +2,7 @@
 
 from fastapi import Path, HTTPException
 from pydantic import BaseModel
+
 from server import app, kaspad_client
 
 

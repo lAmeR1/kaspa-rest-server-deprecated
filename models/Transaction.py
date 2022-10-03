@@ -13,7 +13,7 @@ class Transaction(Base):
     block_hash = Column(ARRAY(String))  # "1b41af8cfe1851243bedf596b7299c039b86b2fef8eb4204b04f954da5d2ab0f",
     block_time = Column(BigInteger)  # "1663286480803"
     is_accepted = Column(Boolean, default=False)
-    accepted_block_hash = Column(String, nullable=True)
+    accepting_block_hash = Column(String, nullable=True)
 
 
 class TransactionOutput(Base):
@@ -22,10 +22,10 @@ class TransactionOutput(Base):
     transaction_id = Column(String, ForeignKey('transactions.transaction_id'))
     index = Column(Integer)
     amount = Column(BigInteger)
-    scriptPublicKey = Column(String)
-    scriptPublicKeyAddress = Column(String)
-    scriptPublicKeyType = Column(String)
-    accepted_block_hash = Column(String)
+    script_public_key = Column(String)
+    script_public_key_address = Column(String)
+    script_public_key_type = Column(String)
+    accepting_block_hash = Column(String)
 
 
 class TransactionInput(Base):
@@ -37,5 +37,5 @@ class TransactionInput(Base):
     previous_outpoint_hash = Column(String)  # "ebf6da83db96d312a107a2ced19a01823894c9d7072ed0d696a9a152fd81485e"
     previous_outpoint_index = Column(String)  # "ebf6da83db96d312a107a2ced19a01823894c9d7072ed0d696a9a152fd81485e"
 
-    signatureScript = Column(String)  # "41c903159094....281a1d26f70b0037d600554e01",
-    sigOpCount = Column(Integer)
+    signature_script = Column(String)  # "41c903159094....281a1d26f70b0037d600554e01",
+    sig_op_count = Column(Integer)

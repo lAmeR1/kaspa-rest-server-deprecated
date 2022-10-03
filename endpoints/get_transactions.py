@@ -16,8 +16,8 @@ class TxInput(BaseModel):
     index: int
     previous_outpoint_hash: str
     previous_outpoint_index: str
-    signatureScript: str
-    sigOpCount: str
+    signature_script: str
+    sig_op_count: str
 
     class Config:
         orm_mode = True
@@ -28,10 +28,10 @@ class TxOutput(BaseModel):
     transaction_id: str
     index: int
     amount: int
-    scriptPublicKey: str
-    scriptPublicKeyAddress: str
-    scriptPublicKeyType: str
-    accepted_block_hash: str | None
+    script_public_key: str
+    script_public_key_address: str
+    script_public_key_type: str
+    accepting_block_hash: str | None
 
     class Config:
         orm_mode = True
@@ -45,8 +45,8 @@ class TxModel(BaseModel):
     block_hash: List[str]
     block_time: int
     is_accepted: bool
-    accepted_block_hash: str | None
-    accepted_block_blue_score: int | None
+    accepting_block_hash: str | None
+    accepting_block_blue_score: int | None
     inputs: List[TxInput] | None
     outputs: List[TxOutput] | None
 
@@ -71,7 +71,7 @@ async def get_transaction(transactionId: str = Path(regex="[a-f0-9]{64}"),
     """
     with session_maker() as s:
         tx = s.query(Transaction, Block.blue_score) \
-            .join(Block, Transaction.accepted_block_hash == Block.hash, isouter=True) \
+            .join(Block, Transaction.accepting_block_hash == Block.hash, isouter=True) \
             .filter(Transaction.transaction_id == transactionId) \
             .first()
 
@@ -97,8 +97,8 @@ async def get_transaction(transactionId: str = Path(regex="[a-f0-9]{64}"),
             "block_hash": tx.Transaction.block_hash,
             "block_time": tx.Transaction.block_time,
             "is_accepted": tx.Transaction.is_accepted,
-            "accepted_block_hash": tx.Transaction.accepted_block_hash,
-            "accepted_block_blue_score": tx.blue_score,
+            "accepting_block_hash": tx.Transaction.accepting_block_hash,
+            "accepting_block_blue_score": tx.blue_score,
             "outputs": parse_obj_as(List[TxOutput], tx_outputs) if tx_outputs else None,
             "inputs": parse_obj_as(List[TxInput], tx_inputs) if tx_inputs else None
         }
@@ -118,7 +118,7 @@ async def search_for_transactions(txSearch: TxSearch,
     Get block information for a given block id
     """
     with session_maker() as s:
-        tx_list = s.query(Transaction, Block.blue_score).join(Block, Transaction.accepted_block_hash == Block.hash).filter(Transaction.transaction_id.in_(txSearch.transactionIds)).all()
+        tx_list = s.query(Transaction, Block.blue_score).join(Block, Transaction.accepting_block_hash == Block.hash).filter(Transaction.transaction_id.in_(txSearch.transactionIds)).all()
         tx_inputs = s.query(TransactionInput) \
             .filter(TransactionInput.transaction_id.in_(txSearch.transactionIds)) \
             .all()
@@ -134,8 +134,8 @@ async def search_for_transactions(txSearch: TxSearch,
         "block_hash": tx.Transaction.block_hash,
         "block_time": tx.Transaction.block_time,
         "is_accepted": tx.Transaction.is_accepted,
-        "accepted_block_hash": tx.Transaction.accepted_block_hash,
-        "accepted_block_blue_score": tx.blue_score,
+        "accepting_block_hash": tx.Transaction.accepting_block_hash,
+        "accepting_block_blue_score": tx.blue_score,
         "outputs": parse_obj_as(List[TxOutput], [x for x in tx_outputs if x.transaction_id == tx.Transaction.transaction_id]),
         "inputs": parse_obj_as(List[TxInput], [x for x in tx_inputs if x.transaction_id == tx.Transaction.transaction_id])
     } for tx in tx_list)
