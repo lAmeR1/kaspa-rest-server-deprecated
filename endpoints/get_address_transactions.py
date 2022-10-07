@@ -41,13 +41,15 @@ async def get_transactions_for_address(
     # ORDER by transactions_outputs.transaction_id
     with session_maker() as session:
         resp = session.execute(text(f"""
-            SELECT transactions_outputs.transaction_id, transactions_outputs.index, transactions_inputs.transaction_id as inp_transaction, transactions.block_time FROM transactions_outputs
-            LEFT JOIN transactions_inputs ON transactions_inputs.previous_outpoint_hash = transactions_outputs.transaction_id AND transactions_inputs.previous_outpoint_index::int = transactions_outputs.index
-			LEFT JOIN transactions ON transactions.transaction_id = transactions_outputs.transaction_id
+            SELECT transactions_outputs.transaction_id, transactions_outputs.index, transactions_inputs.transaction_id as inp_transaction,
+transactions.block_time, transactions.transaction_id
+
+FROM transactions
+			LEFT JOIN transactions_outputs ON transactions.transaction_id = transactions_outputs.transaction_id
+			LEFT JOIN transactions_inputs ON transactions_inputs.previous_outpoint_hash = transactions.transaction_id AND transactions_inputs.previous_outpoint_index::int = transactions_outputs.index
             WHERE "script_public_key_address" = '{kaspaAddress}'
-			ORDER by block_time DESC
-			 
-LIMIT 200""")).all()
+			ORDER by transactions.block_time DESC
+			LIMIT 500""")).all()
 
     # build response
     tx_list = []
