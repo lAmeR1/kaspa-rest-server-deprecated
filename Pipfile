@@ -13,7 +13,8 @@ requests = "*"
 websockets = "*"
 fastapi-utils = "*"
 python-socketio = "*"
-psycopg2 = "*"
+psycopg2 = {extras = ["async"], version = "*"}
+asyncpg = "*"
 
 [requires]
 python_version = "3.10"

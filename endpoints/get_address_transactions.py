@@ -5,7 +5,7 @@ from fastapi import Path
 from pydantic import BaseModel
 from sqlalchemy import text
 
-from dbsession import session_maker
+from dbsession import async_session
 from server import app
 
 
@@ -39,17 +39,19 @@ async def get_transactions_for_address(
     # WHERE "script_public_key_address" = 'kaspa:qp7d7rzrj34s2k3qlxmguuerfh2qmjafc399lj6606fc7s69l84h7mrj49hu6'
     #
     # ORDER by transactions_outputs.transaction_id
-    with session_maker() as session:
-        resp = session.execute(text(f"""
+    async with async_session() as session:
+        resp = await session.execute(text(f"""
             SELECT transactions_outputs.transaction_id, transactions_outputs.index, transactions_inputs.transaction_id as inp_transaction,
-transactions.block_time, transactions.transaction_id
-
-FROM transactions
+                    transactions.block_time, transactions.transaction_id
+            
+            FROM transactions
 			LEFT JOIN transactions_outputs ON transactions.transaction_id = transactions_outputs.transaction_id
 			LEFT JOIN transactions_inputs ON transactions_inputs.previous_outpoint_hash = transactions.transaction_id AND transactions_inputs.previous_outpoint_index::int = transactions_outputs.index
             WHERE "script_public_key_address" = '{kaspaAddress}'
 			ORDER by transactions.block_time DESC
-			LIMIT 500""")).all()
+			LIMIT 500"""))
+
+        resp = resp.all()
 
     # build response
     tx_list = []

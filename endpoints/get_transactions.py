@@ -3,8 +3,9 @@ from typing import List
 
 from fastapi import Path, HTTPException
 from pydantic import BaseModel, parse_obj_as
+from sqlalchemy.future import select
 
-from dbsession import session_maker
+from dbsession import async_session
 from models.Block import Block
 from models.Transaction import Transaction, TransactionOutput, TransactionInput
 from server import app
@@ -69,24 +70,26 @@ async def get_transaction(transactionId: str = Path(regex="[a-f0-9]{64}"),
     """
     Get block information for a given block id
     """
-    with session_maker() as s:
-        tx = s.query(Transaction, Block.blue_score) \
-            .join(Block, Transaction.accepting_block_hash == Block.hash, isouter=True) \
-            .filter(Transaction.transaction_id == transactionId) \
-            .first()
+    async with async_session() as s:
+        tx = await s.execute(select(Transaction, Block.blue_score) \
+                             .join(Block, Transaction.accepting_block_hash == Block.hash, isouter=True) \
+                             .filter(Transaction.transaction_id == transactionId))
+
+        tx = tx.first()
 
         tx_outputs = None
         tx_inputs = None
 
         if outputs:
-            tx_outputs = s.query(TransactionOutput) \
-                .filter(TransactionOutput.transaction_id == transactionId) \
-                .all()
+            tx_outputs = await s.execute(select(TransactionOutput) \
+                                         .filter(TransactionOutput.transaction_id == transactionId))
+
+            tx_outputs = tx_outputs.scalars().all()
 
         if inputs:
-            tx_inputs = s.query(TransactionInput) \
-                .filter(TransactionInput.transaction_id == transactionId) \
-                .all()
+            tx_inputs = await s.execute(select(TransactionInput) \
+                                        .filter(TransactionInput.transaction_id == transactionId))
+            tx_inputs = tx_inputs.scalars().all()
 
     if tx:
         return {
@@ -117,14 +120,20 @@ async def search_for_transactions(txSearch: TxSearch,
     """
     Get block information for a given block id
     """
-    with session_maker() as s:
-        tx_list = s.query(Transaction, Block.blue_score).join(Block, Transaction.accepting_block_hash == Block.hash).filter(Transaction.transaction_id.in_(txSearch.transactionIds)).all()
-        tx_inputs = s.query(TransactionInput) \
-            .filter(TransactionInput.transaction_id.in_(txSearch.transactionIds)) \
-            .all()
-        tx_outputs = s.query(TransactionOutput) \
-            .filter(TransactionOutput.transaction_id.in_(txSearch.transactionIds)) \
-            .all()
+    async with async_session() as s:
+        tx_list = await s.execute(select(Transaction, Block.blue_score) \
+                                  .join(Block, Transaction.accepting_block_hash == Block.hash) \
+                                  .filter(Transaction.transaction_id.in_(txSearch.transactionIds)))
+
+        tx_list = tx_list.all()
+
+        tx_inputs = await s.execute(select(TransactionInput) \
+                                    .filter(TransactionInput.transaction_id.in_(txSearch.transactionIds)))
+        tx_inputs = tx_inputs.scalars().all()
+
+        tx_outputs = await s.execute(select(TransactionOutput) \
+                                     .filter(TransactionOutput.transaction_id.in_(txSearch.transactionIds)))
+        tx_outputs = tx_outputs.scalars().all()
 
     return ({
         "subnetwork_id": tx.Transaction.subnetwork_id,
@@ -136,6 +145,8 @@ async def search_for_transactions(txSearch: TxSearch,
         "is_accepted": tx.Transaction.is_accepted,
         "accepting_block_hash": tx.Transaction.accepting_block_hash,
         "accepting_block_blue_score": tx.blue_score,
-        "outputs": parse_obj_as(List[TxOutput], [x for x in tx_outputs if x.transaction_id == tx.Transaction.transaction_id]),
-        "inputs": parse_obj_as(List[TxInput], [x for x in tx_inputs if x.transaction_id == tx.Transaction.transaction_id])
+        "outputs": parse_obj_as(List[TxOutput],
+                                [x for x in tx_outputs if x.transaction_id == tx.Transaction.transaction_id]),
+        "inputs": parse_obj_as(List[TxInput],
+                               [x for x in tx_inputs if x.transaction_id == tx.Transaction.transaction_id])
     } for tx in tx_list)
