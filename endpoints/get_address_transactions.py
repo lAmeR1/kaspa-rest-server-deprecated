@@ -57,7 +57,7 @@ async def get_transactions_for_address(
     tx_list = []
     for x in resp:
         tx_list.append({"tx_received": x[0],
-                        "tx_sent": x[1]})
+                        "tx_sent": x[2]})
     return {
         "transactions": tx_list
     }
