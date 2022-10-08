@@ -22,8 +22,7 @@ class TransactionForAddressResponse(BaseModel):
 @app.get("/addresses/{kaspaAddress}/transactions",
          response_model=TransactionForAddressResponse,
          response_model_exclude_unset=True,
-         tags=["Kaspa addresses"],
-         include_in_schema=False)
+         tags=["Kaspa addresses"])
 async def get_transactions_for_address(
         kaspaAddress: str = Path(
             description="Kaspa address as string e.g. "
@@ -57,7 +56,7 @@ async def get_transactions_for_address(
     tx_list = []
     for x in resp:
         tx_list.append({"tx_received": x[0],
-                        "tx_sent": x[2]})
+                        "tx_spent": x[2]})
     return {
         "transactions": tx_list
     }

@@ -62,8 +62,7 @@ class TxSearch(BaseModel):
 @app.get("/transactions/{transactionId}",
          response_model=TxModel,
          tags=["Kaspa transactions"],
-         response_model_exclude_unset=True,
-         include_in_schema=False)
+         response_model_exclude_unset=True)
 async def get_transaction(transactionId: str = Path(regex="[a-f0-9]{64}"),
                           inputs: bool = True,
                           outputs: bool = True):
@@ -112,8 +111,7 @@ async def get_transaction(transactionId: str = Path(regex="[a-f0-9]{64}"),
 @app.post("/transactions/search",
           response_model=List[TxModel],
           tags=["Kaspa transactions"],
-          response_model_exclude_unset=True,
-          include_in_schema=False)
+          response_model_exclude_unset=True)
 async def search_for_transactions(txSearch: TxSearch,
                                   inputs: bool = True,
                                   outputs: bool = True):
