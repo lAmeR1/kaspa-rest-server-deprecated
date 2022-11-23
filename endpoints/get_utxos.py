@@ -10,7 +10,7 @@ from server import app, kaspad_client
 
 class OutpointModel(BaseModel):
     transactionId: str = "ef62efbc2825d3ef9ec1cf9b80506876ac077b64b11a39c8ef5e028415444dc9"
-    index: int = 1
+    index: int = 0
 
 
 class ScriptPublicKeyModel(BaseModel):
