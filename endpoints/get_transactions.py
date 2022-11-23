@@ -125,13 +125,19 @@ async def search_for_transactions(txSearch: TxSearch,
 
         tx_list = tx_list.all()
 
-        tx_inputs = await s.execute(select(TransactionInput) \
-                                    .filter(TransactionInput.transaction_id.in_(txSearch.transactionIds)))
-        tx_inputs = tx_inputs.scalars().all()
+        if inputs:
+            tx_inputs = await s.execute(select(TransactionInput) \
+                                        .filter(TransactionInput.transaction_id.in_(txSearch.transactionIds)))
+            tx_inputs = tx_inputs.scalars().all()
+        else:
+            tx_inputs = None
 
-        tx_outputs = await s.execute(select(TransactionOutput) \
-                                     .filter(TransactionOutput.transaction_id.in_(txSearch.transactionIds)))
-        tx_outputs = tx_outputs.scalars().all()
+        if outputs:
+            tx_outputs = await s.execute(select(TransactionOutput) \
+                                         .filter(TransactionOutput.transaction_id.in_(txSearch.transactionIds)))
+            tx_outputs = tx_outputs.scalars().all()
+        else:
+            tx_outputs = None
 
     return ({
         "subnetwork_id": tx.Transaction.subnetwork_id,
@@ -144,7 +150,9 @@ async def search_for_transactions(txSearch: TxSearch,
         "accepting_block_hash": tx.Transaction.accepting_block_hash,
         "accepting_block_blue_score": tx.blue_score,
         "outputs": parse_obj_as(List[TxOutput],
-                                [x for x in tx_outputs if x.transaction_id == tx.Transaction.transaction_id]),
+                                [x for x in tx_outputs if x.transaction_id == tx.Transaction.transaction_id])
+        if tx_outputs else None,  # parse only if needed
         "inputs": parse_obj_as(List[TxInput],
                                [x for x in tx_inputs if x.transaction_id == tx.Transaction.transaction_id])
+        if tx_inputs else None  # parse only if needed
     } for tx in tx_list)
