@@ -72,7 +72,7 @@ async def get_transaction(transactionId: str = Path(regex="[a-f0-9]{64}"),
     """
     async with async_session() as s:
         tx = await s.execute(select(Transaction, Block.blue_score) \
-                             .join(Block, Transaction.accepting_block_hash == Block.hash, isouter=True) \
+                             .join(Block, Transaction.accepting_block_hash == Block.hash, isouter=True)
                              .filter(Transaction.transaction_id == transactionId))
 
         tx = tx.first()
@@ -121,8 +121,8 @@ async def search_for_transactions(txSearch: TxSearch,
     fields = fields.split(",") if fields else []
 
     async with async_session() as s:
-        tx_list = await s.execute(select(Transaction, Block.blue_score) \
-                                  .join(Block, Transaction.accepting_block_hash == Block.hash) \
+        tx_list = await s.execute(select(Transaction, Block.blue_score)
+                                  .join(Block, Transaction.accepting_block_hash == Block.hash)
                                   .filter(Transaction.transaction_id.in_(txSearch.transactionIds)))
 
         tx_list = tx_list.all()
@@ -140,8 +140,6 @@ async def search_for_transactions(txSearch: TxSearch,
             tx_outputs = tx_outputs.scalars().all()
         else:
             tx_outputs = None
-
-
 
     return (filter_fields({
         "subnetwork_id": tx.Transaction.subnetwork_id,
