@@ -6,6 +6,7 @@ from pydantic import BaseModel, parse_obj_as
 from sqlalchemy.future import select
 
 from dbsession import async_session
+from endpoints import filter_fields
 from models.Block import Block
 from models.Transaction import Transaction, TransactionOutput, TransactionInput
 from server import app
@@ -39,13 +40,13 @@ class TxOutput(BaseModel):
 
 
 class TxModel(BaseModel):
-    subnetwork_id: str
-    transaction_id: str
-    hash: str
+    subnetwork_id: str | None
+    transaction_id: str | None
+    hash: str | None
     mass: str | None
-    block_hash: List[str]
-    block_time: int
-    is_accepted: bool
+    block_hash: List[str] | None
+    block_time: int | None
+    is_accepted: bool | None
     accepting_block_hash: str | None
     accepting_block_blue_score: int | None
     inputs: List[TxInput] | None
@@ -113,11 +114,12 @@ async def get_transaction(transactionId: str = Path(regex="[a-f0-9]{64}"),
           tags=["Kaspa transactions"],
           response_model_exclude_unset=True)
 async def search_for_transactions(txSearch: TxSearch,
-                                  inputs: bool = True,
-                                  outputs: bool = True):
+                                  fields: str = ""):
     """
     Get block information for a given block id
     """
+    fields = fields.split(",") if fields else []
+
     async with async_session() as s:
         tx_list = await s.execute(select(Transaction, Block.blue_score) \
                                   .join(Block, Transaction.accepting_block_hash == Block.hash) \
@@ -125,21 +127,23 @@ async def search_for_transactions(txSearch: TxSearch,
 
         tx_list = tx_list.all()
 
-        if inputs:
+        if not fields or "inputs" in fields:
             tx_inputs = await s.execute(select(TransactionInput) \
                                         .filter(TransactionInput.transaction_id.in_(txSearch.transactionIds)))
             tx_inputs = tx_inputs.scalars().all()
         else:
             tx_inputs = None
 
-        if outputs:
+        if not fields or "outputs" in fields:
             tx_outputs = await s.execute(select(TransactionOutput) \
                                          .filter(TransactionOutput.transaction_id.in_(txSearch.transactionIds)))
             tx_outputs = tx_outputs.scalars().all()
         else:
             tx_outputs = None
 
-    return ({
+
+
+    return (filter_fields({
         "subnetwork_id": tx.Transaction.subnetwork_id,
         "transaction_id": tx.Transaction.transaction_id,
         "hash": tx.Transaction.hash,
@@ -155,4 +159,4 @@ async def search_for_transactions(txSearch: TxSearch,
         "inputs": parse_obj_as(List[TxInput],
                                [x for x in tx_inputs if x.transaction_id == tx.Transaction.transaction_id])
         if tx_inputs else None  # parse only if needed
-    } for tx in tx_list)
+    }, fields) for tx in tx_list)
