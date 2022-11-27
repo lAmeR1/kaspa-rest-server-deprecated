@@ -25,11 +25,10 @@ RUN addgroup -S -g 55747 api \
 WORKDIR /app
 USER api
 
-COPY --chown=api:api "$REPO_DIR" /app
+COPY --chown=api:api * /app
 
 RUN pipenv install --deploy
 
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 
 CMD pipenv run gunicorn -b 0.0.0.0:8000 -w 1 -k uvicorn.workers.UvicornWorker main:app
-
