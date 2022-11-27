@@ -25,7 +25,7 @@ RUN addgroup -S -g 55747 api \
 WORKDIR /app
 USER api
 
-COPY --chown=api:api * /app
+COPY --chown=api:api . /app
 
 RUN pipenv install --deploy
 
