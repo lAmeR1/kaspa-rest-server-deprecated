@@ -45,4 +45,5 @@ async def get_utxos_for_address(kaspaAddress: str = Path(
     except KeyError:
         if "getUtxosByAddressesResponse" in resp and "error" in resp["getUtxosByAddressesResponse"]:
             raise HTTPException(status_code=400, detail=resp["getUtxosByAddressesResponse"]["error"])
-        raise
+        else:
+            return []
