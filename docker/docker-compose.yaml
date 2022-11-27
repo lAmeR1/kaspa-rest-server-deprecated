@@ -1,0 +1,65 @@
+version: "3"
+
+services:
+  kaspa_explorer:
+    container_name: kaspa_explorer
+    image: supertypo/kaspa-explorer:latest
+    restart: unless-stopped
+    environment:
+      API_URI: "http://localhost:8000"
+      API_WS_URI: "ws://localhost:8000"
+    ports:
+      - "8080:8080/tcp"
+
+  kaspa_rest_server:
+    container_name: kaspa_rest_server
+    image: supertypo/kaspa-rest-server:latest
+    restart: unless-stopped
+    environment:
+      KASPAD_HOST_1: kaspad:16110
+      SQL_URI: postgresql+asyncpg://postgres:postgres@postgresql:5432/postgres
+    ports:
+      - "8000:8000/tcp"
+    links:
+      - kaspad
+      - postgresql
+
+  kaspa_db_filler:
+    container_name: kaspa_db_filler
+    image: supertypo/kaspa-db-filler:latest
+    restart: unless-stopped
+    environment:
+      DEBUG: "true"
+      KASPAD_HOST_1: kaspad:16110
+      SQL_URI: postgresql://postgres:postgres@postgresql:5432/postgres
+    links:
+      - kaspad
+      - postgresql
+
+  postgresql:
+    container_name: postgresql
+    image: postgres:14-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432/tcp"
+    volumes:
+      - postgresql:/var/lib/postgresql/data/
+
+  kaspad:
+    container_name: kaspad
+    image: supertypo/kaspad:latest
+    restart: unless-stopped
+    ports:
+      - "16110:16110/tcp"
+      - "16111:16111/tcp"
+    volumes:
+      - kaspad:/app/data/
+    command: kaspad --utxoindex --connect=kdxweb.kaspacalc.net
+
+volumes:
+  postgresql:
+  kaspad:
