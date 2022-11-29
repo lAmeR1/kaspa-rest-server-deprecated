@@ -1,4 +1,5 @@
 # encoding: utf-8
+import time
 
 from pydantic import BaseModel
 from sqlalchemy import select
@@ -6,6 +7,8 @@ from sqlalchemy import select
 from dbsession import async_session
 from models.Block import Block
 from server import app, kaspad_client
+
+MAXHASH_CACHE = (0, 0)
 
 
 class BlockHeader(BaseModel):
@@ -49,24 +52,31 @@ async def get_max_hashrate():
     """
     Returns the current hashrate for Kaspa network in TH/s.
     """
+    global MAXHASH_CACHE
+
+    if time.time() - MAXHASH_CACHE[0] < 60 * 5:
+        return MAXHASH_CACHE[1]
+
     async with async_session() as s:
         tx = await s.execute(select(Block)
                              .order_by(Block.difficulty.desc()).limit(1))
 
         tx = tx.first()
 
-    print(tx)
-
     hashrate = tx[0].difficulty * 2
     hashrate_in_th = hashrate / 1_000_000_000_000
 
-    return {"hashrate": hashrate_in_th,
-            "blockheader":
-                {
-                    "hash": tx[0].hash,
-                    "timestamp": tx[0].timestamp.isoformat(),
-                    "difficulty": tx[0].difficulty,
-                    "daaScore": tx[0].daa_score,
-                    "blueScore": tx[0].blue_score
+    response = {"hashrate": hashrate_in_th,
+                "blockheader":
+                    {
+                        "hash": tx[0].hash,
+                        "timestamp": tx[0].timestamp.isoformat(),
+                        "difficulty": tx[0].difficulty,
+                        "daaScore": tx[0].daa_score,
+                        "blueScore": tx[0].blue_score
+                    }
                 }
-            }
+
+    MAXHASH_CACHE = (time.time(), response)
+
+    return response
