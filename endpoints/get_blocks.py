@@ -3,7 +3,10 @@ from typing import List
 
 from fastapi import Query, Path, HTTPException
 from pydantic import BaseModel
+from sqlalchemy import select
 
+from dbsession import async_session
+from models.Block import Block
 from server import app, kaspad_client
 
 
@@ -67,7 +70,44 @@ async def get_block(blockId: str = Path(regex="[a-f0-9]{64}")):
     try:
         return resp["getBlockResponse"]["block"]
     except KeyError:
-        raise HTTPException(status_code=404, detail="Block not found")
+
+        async with async_session() as s:
+            requested_block = await s.execute(select(Block)
+                                              .where(Block.hash == blockId).limit(1))
+
+            requested_block = requested_block.first()[0]  # type: Block
+
+        if requested_block:
+            return {
+                "header": {
+                    "version": requested_block.version,
+                    "hashMerkleRoot": requested_block.hash_merkle_root,
+                    "acceptedIdMerkleRoot": requested_block.accepted_id_merkle_root,
+                    "utxoCommitment": requested_block.utxo_commitment,
+                    "timestamp": str(requested_block.timestamp),
+                    "bits": requested_block.bits,
+                    "nonce": requested_block.nonce,
+                    "daaScore": requested_block.daa_score,
+                    "blueWork": requested_block.blue_score,
+                    "parents": [{"parentHashes": requested_block.parents}],
+                    "blueScore": requested_block.blue_score,
+                    "pruningPoint": requested_block.pruning_point
+                },
+                "transactions": [],
+                "verboseData": {
+                    "hash": requested_block.hash,
+                    "difficulty": requested_block.difficulty,
+                    "selectedParentHash": requested_block.selected_parent_hash,
+                    "transactionIds": [],
+                    "blueScore": requested_block.blue_score,
+                    "childrenHashes": [],
+                    "mergeSetBluesHashes": requested_block.merge_set_blues_hashes,
+                    "mergeSetRedsHashes": requested_block.merge_set_reds_hashes,
+                    "isChainBlock": requested_block.is_chain_block
+                }
+            }
+        else:
+            raise HTTPException(status_code=404, detail="Block not found")
 
 
 @app.get("/blocks", response_model=BlockResponse, tags=["Kaspa blocks"])
@@ -75,7 +115,8 @@ async def get_blocks(lowHash: str = Query(regex="[a-f0-9]{64}"),
                      includeBlocks: bool = False,
                      includeTransactions: bool = False):
     """
-    Lists block beginning from a low hash (block id)
+    Lists block beginning from a low hash (block id). Note that this function is running on a kaspad and not returning
+    data from database.
     """
     resp = await kaspad_client.request("getBlocksRequest",
                                        params={
