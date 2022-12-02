@@ -44,7 +44,7 @@ app.add_middleware(
 
 @app.get("/ping", include_in_schema=False,
          response_class=PlainTextResponse)
-async def get_circulating_coins(in_billion: bool = False):
+async def ping_server():
     """
     Ping Pong
     """
