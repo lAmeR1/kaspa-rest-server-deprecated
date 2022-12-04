@@ -2,11 +2,13 @@
 from typing import List
 
 from fastapi import Query, Path, HTTPException
+from fastapi import Response
 from pydantic import BaseModel
 from sqlalchemy import select
 
 from dbsession import async_session
 from models.Block import Block
+from models.Transaction import TransactionOutput, TransactionInput
 from server import app, kaspad_client
 
 
@@ -58,7 +60,8 @@ class BlockResponse(BaseModel):
 
 
 @app.get("/blocks/{blockId}", response_model=BlockModel, tags=["Kaspa blocks"])
-async def get_block(blockId: str = Path(regex="[a-f0-9]{64}")):
+async def get_block(response: Response,
+                    blockId: str = Path(regex="[a-f0-9]{64}")):
     """
     Get block information for a given block id
     """
@@ -70,14 +73,73 @@ async def get_block(blockId: str = Path(regex="[a-f0-9]{64}")):
     try:
         return resp["getBlockResponse"]["block"]
     except KeyError:
-
+        # not found on kaspad - check database
         async with async_session() as s:
             requested_block = await s.execute(select(Block)
                                               .where(Block.hash == blockId).limit(1))
 
-            requested_block = requested_block.first()[0]  # type: Block
+            try:
+                requested_block = requested_block.first()[0]  # type: Block
+            except TypeError:
+                raise HTTPException(status_code=404, detail="Block not found")
 
         if requested_block:
+            response.headers["X-Data-Source"] = "Database"
+
+            # get transactions information
+            async with async_session() as s:
+                transactions = await s.execute("SELECT * FROM transactions WHERE block_hash @> '{"
+                                               f"{blockId}"
+                                               "}'""")
+                transactions = transactions.all()
+
+                tx_outputs = await s.execute(select(TransactionOutput)
+                                             .where(TransactionOutput.transaction_id
+                                                    .in_([tx.transaction_id for tx in transactions])))
+
+                tx_outputs = tx_outputs.scalars().all()
+
+                tx_inputs = await s.execute(select(TransactionInput)
+                                            .where(TransactionInput.transaction_id
+                                                   .in_([tx.transaction_id for tx in transactions])))
+
+                tx_inputs = tx_inputs.scalars().all()
+
+            # create tx data
+            tx_list = []
+            for tx in transactions:
+                tx_list.append({
+                    "inputs": [
+                        {
+                            "previousOutpoint": {
+                                "transactionId": tx_inp.previous_outpoint_hash,
+                                "index": tx_inp.previous_outpoint_index
+                            },
+                            "signatureScript": tx_inp.signature_script,
+                            "sigOpCount": tx_inp.sig_op_count
+                        }
+                        for tx_inp in tx_inputs if tx_inp.transaction_id == tx.transaction_id],
+                    "outputs": [
+                        {
+                            "amount": tx_out.amount,
+                            "scriptPublicKey": {
+                                "scriptPublicKey": tx_out.script_public_key
+                            },
+                            "verboseData": {
+                                "scriptPublicKeyType": tx_out.script_public_key_type,
+                                "scriptPublicKeyAddress": tx_out.script_public_key_address
+                            }
+                        } for tx_out in tx_outputs if tx_out.transaction_id == tx.transaction_id],
+                    "subnetworkId": tx.subnetwork_id,
+                    "verboseData": {
+                        "transactionId": tx.transaction_id,
+                        "hash": tx.hash,
+                        "mass": tx.mass,
+                        "blockHash": tx.block_hash,
+                        "blockTime": tx.block_time
+                    }
+                })
+
             return {
                 "header": {
                     "version": requested_block.version,
@@ -93,7 +155,7 @@ async def get_block(blockId: str = Path(regex="[a-f0-9]{64}")):
                     "blueScore": requested_block.blue_score,
                     "pruningPoint": requested_block.pruning_point
                 },
-                "transactions": [],
+                "transactions": tx_list,
                 "verboseData": {
                     "hash": requested_block.hash,
                     "difficulty": requested_block.difficulty,

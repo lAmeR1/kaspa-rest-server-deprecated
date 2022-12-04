@@ -1,4 +1,5 @@
-from sqlalchemy import Column, String, Float, Boolean, ARRAY, Integer, BigInteger, TIMESTAMP
+from sqlalchemy import Column, String, Float, Boolean, Integer, BigInteger, TIMESTAMP
+from sqlalchemy.dialects.postgresql import ARRAY
 
 from dbsession import Base
 
