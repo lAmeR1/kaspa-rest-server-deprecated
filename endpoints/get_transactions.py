@@ -122,7 +122,7 @@ async def search_for_transactions(txSearch: TxSearch,
 
     async with async_session() as s:
         tx_list = await s.execute(select(Transaction, Block.blue_score)
-                                  .join(Block, Transaction.accepting_block_hash == Block.hash)
+                                  .join(Block, Transaction.accepting_block_hash == Block.hash, isouter=True)
                                   .filter(Transaction.transaction_id.in_(txSearch.transactionIds)))
 
         tx_list = tx_list.all()
