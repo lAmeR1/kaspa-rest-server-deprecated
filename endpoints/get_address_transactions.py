@@ -1,7 +1,7 @@
 # encoding: utf-8
 from typing import List
 
-from fastapi import Path
+from fastapi import Path, Query
 from pydantic import BaseModel
 from sqlalchemy import text
 
@@ -27,7 +27,17 @@ async def get_transactions_for_address(
         kaspaAddress: str = Path(
             description="Kaspa address as string e.g. "
                         "kaspa:pzhh76qc82wzduvsrd9xh4zde9qhp0xc8rl7qu2mvl2e42uvdqt75zrcgpm00",
-            regex="^kaspa\:[a-z0-9]{61}$")):
+            regex="^kaspa\:[a-z0-9]{61}$"),
+        limit: int = Query(
+            description="The number of records to get",
+            ge=1,
+            le=500,
+            default=500,),
+        offset: int = Query(
+            description="The offset from which to get records",
+            ge=0,
+            default=0),
+    ):
     """
     Get all transactions for a given address from database
     """
@@ -42,13 +52,13 @@ async def get_transactions_for_address(
         resp = await session.execute(text(f"""
             SELECT transactions_outputs.transaction_id, transactions_outputs.index, transactions_inputs.transaction_id as inp_transaction,
                     transactions.block_time, transactions.transaction_id
-            
             FROM transactions
 			LEFT JOIN transactions_outputs ON transactions.transaction_id = transactions_outputs.transaction_id
 			LEFT JOIN transactions_inputs ON transactions_inputs.previous_outpoint_hash = transactions.transaction_id AND transactions_inputs.previous_outpoint_index::int = transactions_outputs.index
             WHERE "script_public_key_address" = '{kaspaAddress}'
 			ORDER by transactions.block_time DESC
-			LIMIT 500"""))
+			LIMIT {limit}
+			OFFSET {offset}"""))
 
         resp = resp.all()
 
