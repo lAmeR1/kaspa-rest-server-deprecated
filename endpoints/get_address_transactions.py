@@ -53,12 +53,12 @@ async def get_transactions_for_address(
             SELECT transactions_outputs.transaction_id, transactions_outputs.index, transactions_inputs.transaction_id as inp_transaction,
                     transactions.block_time, transactions.transaction_id
             FROM transactions
-			LEFT JOIN transactions_outputs ON transactions.transaction_id = transactions_outputs.transaction_id
-			LEFT JOIN transactions_inputs ON transactions_inputs.previous_outpoint_hash = transactions.transaction_id AND transactions_inputs.previous_outpoint_index::int = transactions_outputs.index
+            LEFT JOIN transactions_outputs ON transactions.transaction_id = transactions_outputs.transaction_id
+            LEFT JOIN transactions_inputs ON transactions_inputs.previous_outpoint_hash = transactions.transaction_id AND transactions_inputs.previous_outpoint_index::int = transactions_outputs.index
             WHERE "script_public_key_address" = '{kaspaAddress}'
-			ORDER by transactions.block_time DESC
-			LIMIT {limit}
-			OFFSET {offset}"""))
+            ORDER by transactions.block_time DESC
+            LIMIT {limit}
+            OFFSET {offset}"""))
 
         resp = resp.all()
 
