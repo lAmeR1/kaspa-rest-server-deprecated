@@ -4,9 +4,10 @@ from typing import List
 from fastapi import Path
 from pydantic import BaseModel
 from sqlalchemy import text
+from starlette.requests import Request
 
 from dbsession import async_session
-from server import app
+from server import app, limiter
 
 
 class TransactionsReceivedAndSpent(BaseModel):
@@ -23,7 +24,9 @@ class TransactionForAddressResponse(BaseModel):
          response_model=TransactionForAddressResponse,
          response_model_exclude_unset=True,
          tags=["Kaspa addresses"])
+@limiter.limit("60/minute")
 async def get_transactions_for_address(
+        request: Request,
         kaspaAddress: str = Path(
             description="Kaspa address as string e.g. "
                         "kaspa:pzhh76qc82wzduvsrd9xh4zde9qhp0xc8rl7qu2mvl2e42uvdqt75zrcgpm00",
