@@ -3,10 +3,11 @@ import time
 
 from pydantic import BaseModel
 from sqlalchemy import select
+from fastapi import Request
 
 from dbsession import async_session
 from models.Block import Block
-from server import app, kaspad_client
+from server import app, kaspad_client, limiter
 
 MAXHASH_CACHE = (0, 0)
 
@@ -29,7 +30,8 @@ class MaxHashrateResponse(BaseModel):
 
 
 @app.get("/info/hashrate", response_model=HashrateResponse | str, tags=["Kaspa network info"])
-async def get_hashrate(stringOnly: bool = False):
+@limiter.limit("2/second")
+async def get_hashrate(request: Request, stringOnly: bool = False):
     """
     Returns the current hashrate for Kaspa network in TH/s.
     """
@@ -48,7 +50,9 @@ async def get_hashrate(stringOnly: bool = False):
 
 
 @app.get("/info/hashrate/max", response_model=MaxHashrateResponse, tags=["Kaspa network info"])
-async def get_max_hashrate():
+# TODO: Apply limiter here after setting up tests
+#@limiter.limit("2/second")
+async def get_max_hashrate(request: Request):
     """
     Returns the current hashrate for Kaspa network in TH/s.
     """

@@ -2,8 +2,9 @@
 
 from pydantic import BaseModel
 
-from server import app, kaspad_client
+from server import app, kaspad_client, limiter
 from fastapi.responses import PlainTextResponse
+from fastapi import Request
 
 
 class CoinSupplyResponse(BaseModel):
@@ -12,7 +13,8 @@ class CoinSupplyResponse(BaseModel):
 
 
 @app.get("/info/coinsupply", response_model=CoinSupplyResponse, tags=["Kaspa network info"])
-async def get_coinsupply():
+@limiter.limit("2/second")
+async def get_coinsupply(request: Request):
     """
     Get $KAS coin supply information
     """
@@ -24,7 +26,8 @@ async def get_coinsupply():
 
 @app.get("/info/coinsupply/circulating", tags=["Kaspa network info"],
          response_class=PlainTextResponse)
-async def get_circulating_coins(in_billion : bool = False):
+@limiter.limit("2/second")
+async def get_circulating_coins(request: Request, in_billion : bool = False):
     """
     Get circulating amount of $KAS token as numerical value
     """

@@ -1,9 +1,9 @@
 # encoding: utf-8
 
-from fastapi import Path, HTTPException
+from fastapi import Path, HTTPException, Request
 from pydantic import BaseModel
 
-from server import app, kaspad_client
+from server import limiter, app, kaspad_client
 
 
 class BalanceResponse(BaseModel):
@@ -12,7 +12,9 @@ class BalanceResponse(BaseModel):
 
 
 @app.get("/addresses/{kaspaAddress}/balance", response_model=BalanceResponse, tags=["Kaspa addresses"])
+@limiter.limit("2/second")
 async def get_balance_from_kaspa_address(
+        request: Request,
         kaspaAddress: str = Path(
             description="Kaspa address as string e.g. kaspa:pzhh76qc82wzduvsrd9xh4zde9qhp0xc8rl7qu2mvl2e42uvdqt75zrcgpm00",
             regex="^kaspa\:[a-z0-9]{61}$")):

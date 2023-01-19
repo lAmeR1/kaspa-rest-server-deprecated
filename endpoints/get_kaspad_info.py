@@ -3,7 +3,9 @@ import hashlib
 
 from pydantic import BaseModel
 
-from server import app, kaspad_client
+from fastapi import Request
+
+from server import app, kaspad_client, limiter
 
 
 class KaspadInfoResponse(BaseModel):
@@ -15,7 +17,8 @@ class KaspadInfoResponse(BaseModel):
 
 
 @app.get("/info/kaspad", response_model=KaspadInfoResponse, tags=["Kaspa network info"])
-async def get_kaspad_info():
+@limiter.limit("2/second")
+async def get_kaspad_info(request: Request):
     """
     Get some information for kaspad instance, which is currently connected.
     """

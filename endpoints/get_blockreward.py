@@ -2,8 +2,10 @@
 
 from pydantic import BaseModel
 
+from fastapi import Request
+
 from helper.deflationary_table import DEFLATIONARY_TABLE
-from server import app, kaspad_client
+from server import app, kaspad_client, limiter
 
 
 class BlockRewardResponse(BaseModel):
@@ -11,7 +13,8 @@ class BlockRewardResponse(BaseModel):
 
 
 @app.get("/info/blockreward", response_model=BlockRewardResponse | str, tags=["Kaspa network info"])
-async def get_blockreward(stringOnly: bool = False):
+@limiter.limit("2/second")
+async def get_blockreward(request: Request, stringOnly: bool = False):
     """
     Returns the current blockreward in KAS/block
     """

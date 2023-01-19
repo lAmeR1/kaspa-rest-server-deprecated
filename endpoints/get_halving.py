@@ -4,9 +4,10 @@ from datetime import datetime
 
 from pydantic import BaseModel
 from starlette.responses import PlainTextResponse
+from fastapi import Request
 
 from helper.deflationary_table import DEFLATIONARY_TABLE
-from server import app, kaspad_client
+from server import app, kaspad_client, limiter
 
 
 class HalvingResponse(BaseModel):
@@ -16,7 +17,8 @@ class HalvingResponse(BaseModel):
 
 
 @app.get("/info/halving", response_model=HalvingResponse | str, tags=["Kaspa network info"])
-async def get_halving(field: str | None = None):
+@limiter.limit("2/second")
+async def get_halving(request: Request, field: str | None = None):
     """
     Returns information about chromatic halving
     """

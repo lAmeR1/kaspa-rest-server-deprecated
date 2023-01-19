@@ -1,9 +1,11 @@
 # encoding: utf-8
 from typing import List
 
+from fastapi import Request
+
 from pydantic import BaseModel
 
-from server import app, kaspad_client
+from server import app, kaspad_client, limiter
 
 
 class BlockdagResponse(BaseModel):
@@ -19,7 +21,8 @@ class BlockdagResponse(BaseModel):
 
 
 @app.get("/info/blockdag", response_model=BlockdagResponse, tags=["Kaspa network info"])
-async def get_blockdag():
+@limiter.limit("2/second")
+async def get_blockdag(request: Request):
     """
     Get some global Kaspa BlockDAG information
     """

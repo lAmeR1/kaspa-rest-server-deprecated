@@ -4,7 +4,9 @@ from typing import List
 
 from pydantic import BaseModel
 
-from server import app, kaspad_client
+from fastapi import Request
+
+from server import app, kaspad_client, limiter
 
 
 class KaspadResponse(BaseModel):
@@ -20,7 +22,8 @@ class HealthResponse(BaseModel):
 
 
 @app.get("/info/health", response_model=HealthResponse, tags=["Kaspa network info"])
-async def health_state():
+@limiter.limit("2/second")
+async def health_state(request: Request):
     """
     Returns the current hashrate for Kaspa network in TH/s.
     """

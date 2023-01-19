@@ -2,10 +2,10 @@
 
 from typing import List
 
-from fastapi import Path, HTTPException
+from fastapi import Path, HTTPException, Request
 from pydantic import BaseModel
 
-from server import app, kaspad_client
+from server import app, kaspad_client, limiter
 
 
 class OutpointModel(BaseModel):
@@ -30,7 +30,10 @@ class UtxoResponse(BaseModel):
 
 
 @app.get("/addresses/{kaspaAddress}/utxos", response_model=List[UtxoResponse], tags=["Kaspa addresses"])
-async def get_utxos_for_address(kaspaAddress: str = Path(
+@limiter.limit("2/second")
+async def get_utxos_for_address(
+    request: Request,
+    kaspaAddress: str = Path(
     description="Kaspa address as string e.g. kaspa:qqkqkzjvr7zwxxmjxjkmxxdwju9kjs6e9u82uh59z07vgaks6gg62v8707g73",
     regex="^kaspa\:[a-z0-9]{61}$")):
     """

@@ -3,7 +3,9 @@ from typing import List
 
 from pydantic import BaseModel
 
-from server import app, kaspad_client
+from fastapi import Request
+
+from server import app, kaspad_client, limiter
 
 
 class NetworkResponse(BaseModel):
@@ -25,7 +27,8 @@ class NetworkResponse(BaseModel):
 
 
 @app.get("/info/network", response_model=NetworkResponse, tags=["Kaspa network info"])
-async def get_network():
+@limiter.limit("2/second")
+async def get_network(request: Request):
     """
     Get some global kaspa network information
     """

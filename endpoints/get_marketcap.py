@@ -3,7 +3,9 @@
 import requests
 from pydantic import BaseModel
 
-from server import app, kaspad_client
+from fastapi import Request
+
+from server import app, kaspad_client, limiter
 
 
 class MarketCapResponse(BaseModel):
@@ -11,7 +13,8 @@ class MarketCapResponse(BaseModel):
 
 
 @app.get("/info/marketcap", response_model=MarketCapResponse | str, tags=["Kaspa network info"])
-async def get_marketcap(stringOnly: bool = False):
+@limiter.limit("2/second")
+async def get_marketcap(request: Request, stringOnly: bool = False):
     """
     Get $KAS price and market cap. Price info is from coingecko.com
     """

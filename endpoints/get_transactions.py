@@ -1,7 +1,7 @@
 # encoding: utf-8
 from typing import List
 
-from fastapi import Path, HTTPException
+from fastapi import Path, HTTPException, Request
 from pydantic import BaseModel, parse_obj_as
 from sqlalchemy.future import select
 
@@ -9,7 +9,7 @@ from dbsession import async_session
 from endpoints import filter_fields
 from models.Block import Block
 from models.Transaction import Transaction, TransactionOutput, TransactionInput
-from server import app
+from server import app, limiter
 
 
 class TxInput(BaseModel):
@@ -64,7 +64,9 @@ class TxSearch(BaseModel):
          response_model=TxModel,
          tags=["Kaspa transactions"],
          response_model_exclude_unset=True)
-async def get_transaction(transactionId: str = Path(regex="[a-f0-9]{64}"),
+@limiter.limit("2/second")
+async def get_transaction(request: Request,
+                          transactionId: str = Path(regex="[a-f0-9]{64}"),
                           inputs: bool = True,
                           outputs: bool = True):
     """
@@ -113,7 +115,9 @@ async def get_transaction(transactionId: str = Path(regex="[a-f0-9]{64}"),
           response_model=List[TxModel],
           tags=["Kaspa transactions"],
           response_model_exclude_unset=True)
-async def search_for_transactions(txSearch: TxSearch,
+@limiter.limit("2/second")
+async def search_for_transactions(request: Request,
+                                  txSearch: TxSearch,
                                   fields: str = ""):
     """
     Get block information for a given block id

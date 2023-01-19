@@ -1,7 +1,7 @@
 # encoding: utf-8
 from typing import List
 
-from fastapi import Query, Path, HTTPException
+from fastapi import Query, Path, HTTPException, Request
 from fastapi import Response
 from pydantic import BaseModel
 from sqlalchemy import select
@@ -9,7 +9,7 @@ from sqlalchemy import select
 from dbsession import async_session
 from models.Block import Block
 from models.Transaction import TransactionOutput, TransactionInput
-from server import app, kaspad_client
+from server import app, kaspad_client, limiter
 
 
 class VerboseDataModel(BaseModel):
@@ -60,7 +60,9 @@ class BlockResponse(BaseModel):
 
 
 @app.get("/blocks/{blockId}", response_model=BlockModel, tags=["Kaspa blocks"])
-async def get_block(response: Response,
+@limiter.limit("2/second")
+async def get_block(request: Request,
+                    response: Response,
                     blockId: str = Path(regex="[a-f0-9]{64}")):
     """
     Get block information for a given block id
@@ -173,7 +175,9 @@ async def get_block(response: Response,
 
 
 @app.get("/blocks", response_model=BlockResponse, tags=["Kaspa blocks"])
-async def get_blocks(lowHash: str = Query(regex="[a-f0-9]{64}"),
+@limiter.limit("2/second")
+async def get_blocks(request: Request,
+                     lowHash: str = Query(regex="[a-f0-9]{64}"),
                      includeBlocks: bool = False,
                      includeTransactions: bool = False):
     """
