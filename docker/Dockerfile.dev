@@ -1,0 +1,23 @@
+FROM python:3.10-alpine
+
+ARG REPO_DIR
+
+EXPOSE 8000
+
+RUN apk --no-cache add \
+  git \
+  gcc \
+  libc-dev \
+  build-base \
+  linux-headers \
+  libpq-dev \
+  dumb-init
+
+RUN pip install \
+  pipenv
+
+WORKDIR /app
+
+COPY . /app
+
+RUN pipenv install --deploy
