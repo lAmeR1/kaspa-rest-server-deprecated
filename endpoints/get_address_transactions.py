@@ -64,11 +64,11 @@ async def get_transactions_for_address(
         "transactions": tx_list
     }
 
-@app.get("/addresses/{kaspaAddress}/transactions/v2",
+@app.get("/addresses/{kaspaAddress}/full-transactions",
          response_model=List[TxModel],
          response_model_exclude_unset=True,
-         tags=["Kaspa addresses transactions"])
-async def get_transactions_for_address_v2(
+         tags=["Kaspa addresses"])
+async def get_full_transactions_for_address(
         kaspaAddress: str = Path(
             description="Kaspa address as string e.g. "
                         "kaspa:pzhh76qc82wzduvsrd9xh4zde9qhp0xc8rl7qu2mvl2e42uvdqt75zrcgpm00",
