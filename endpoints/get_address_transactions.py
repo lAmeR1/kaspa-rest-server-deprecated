@@ -86,19 +86,19 @@ async def get_transactions_for_address_v2(
     ):
     """
     Get all transactions for a given address from database.
-    And then get their related full transactiond data
+    And then get their related full transaction data
     """
 
     async with async_session() as s:
         # Doing it this way as opposed to adding it directly in the IN clause
         # so I can re-use the same result in tx_list, TxInput and TxOutput
-        txWithinLimitOffset = await s.execute(select(TxAddrMapping.transaction_id)
+        tx_within_limit_offset = await s.execute(select(TxAddrMapping.transaction_id)
             .filter(TxAddrMapping.address == kaspaAddress)
             .limit(limit)
             .offset(offset)
             .order_by(TxAddrMapping.block_time.desc())
         )
 
-        txIdsInPage = [x[0] for x in txWithinLimitOffset.all()]
+        tx_ids_in_page = [x[0] for x in tx_within_limit_offset.all()]
 
-    return await search_for_transactions(TxSearch(transactionIds=txIdsInPage), fields)
+    return await search_for_transactions(TxSearch(transactionIds=tx_ids_in_page), fields)
