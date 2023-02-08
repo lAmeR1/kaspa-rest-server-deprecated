@@ -29,5 +29,5 @@ jobs:
         with:
           context: .
           push: true
-          tags: lamer1/kaspa-rest-wallet:${{ env.GITHUB_REF }}, lamer1/kaspa-rest-wallet:latest
+          tags: lamer1/kaspa-rest-wallet:${{GITHUB_REF}}, lamer1/kaspa-rest-wallet:latest
           file: ./docker/Dockerfile
