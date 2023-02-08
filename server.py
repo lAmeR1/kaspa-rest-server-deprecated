@@ -15,10 +15,17 @@ from kaspad.KaspadMultiClient import KaspadMultiClient
 sio = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins=[])
 socket_app = socketio.ASGIApp(sio)
 
+try:
+    with open("VERSION", "r") as f:
+        release_version = f.read()
+except FileNotFoundError:
+    release_version = "x.x.x"
+
+
 app = FastAPI(
     title="Kaspa REST-API server",
     description="This server is to communicate with kaspa network via REST-API",
-    version="0.0.2",
+    version=release_version,
     contact={
         "name": "lAmeR1"
     },
