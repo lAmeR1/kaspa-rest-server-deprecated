@@ -27,4 +27,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: lamer1/kaspa-rest-wallet:$(date +%s), lamer1/kaspa-rest-wallet:latest
+          tags: lamer1/kaspa-rest-wallet:${{ github.run_number }}, lamer1/kaspa-rest-wallet:latest
