@@ -18,7 +18,7 @@ socket_app = socketio.ASGIApp(sio)
 app = FastAPI(
     title="Kaspa REST-API server",
     description="This server is to communicate with kaspa network via REST-API",
-    version="0.0.2",
+    version=os.getenv("RELEASE_VERSION", "x.x.x"),
     contact={
         "name": "lAmeR1"
     },
