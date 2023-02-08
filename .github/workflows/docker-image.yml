@@ -17,6 +17,6 @@ jobs:
       uses: docker/login-action@v2
       with:
         username: lamer1
-        password: {{ secrets.DOCKER_ACCESS_TOKEN }}
+        password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
     - name: Build and push
       run: docker push kaspa-rest-wallet:$(date +%s)
