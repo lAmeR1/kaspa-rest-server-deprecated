@@ -27,7 +27,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: lamer1/kaspa-rest-server:${{github.ref_name}}, lamer1/kaspa-rest-server:latest
+          tags: supertypo/kaspa-rest-server:${{github.ref_name}}, supertypo/kaspa-rest-server:latest
           file: ./docker/Dockerfile
           build-args: |
             version=${{github.ref_name}}
