@@ -12,11 +12,6 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-      - name: Create File
-        uses: finnp/create-file-action@1.0.0
-        env:
-          FILE_NAME: "VERSION"
-          FILE_DATA: ${{github.ref_name}}
       -
         name: Checkout
         uses: actions/checkout@v3
@@ -34,3 +29,5 @@ jobs:
           push: true
           tags: lamer1/kaspa-rest-wallet:${{github.ref_name}}, lamer1/kaspa-rest-wallet:latest
           file: ./docker/Dockerfile
+          build-args: |
+            version=${{github.ref_name}}
