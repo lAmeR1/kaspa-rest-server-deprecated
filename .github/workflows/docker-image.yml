@@ -11,12 +11,20 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
-
-    steps:   
-    - name: Login to Docker Hub
-      uses: docker/login-action@v2
-      with:
-        username: lamer1
-        password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
-    - name: Build and push
-      run: docker push kaspa-rest-wallet:$(date +%s)
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v3
+      -
+        name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: lamer1
+          password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
+      -
+        name: Build and push
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: lamer1/kaspa-rest-wallet:$(date +%s), lamer1/kaspa-rest-wallet:latest
