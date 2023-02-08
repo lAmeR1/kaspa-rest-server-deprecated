@@ -28,3 +28,4 @@ jobs:
           context: .
           push: true
           tags: lamer1/kaspa-rest-wallet:${{ github.run_number }}, lamer1/kaspa-rest-wallet:latest
+          dockerfile: ./docker/Dockerfile
