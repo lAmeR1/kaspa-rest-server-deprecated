@@ -121,7 +121,7 @@ async def get_transaction_count_for_address(
     """
 
     async with async_session() as s:
-        count_query = select(func.count(TxAddrMapping.transaction_id)).filter(TxAddrMapping.address == kaspaAddress)
+        count_query = select(func.count()).filter(TxAddrMapping.address == kaspaAddress)
 
         tx_count = await s.execute(count_query)
 
