@@ -3,7 +3,7 @@ from typing import List
 
 from fastapi import Path, Query
 from pydantic import BaseModel
-from sqlalchemy import text
+from sqlalchemy import text, func
 from sqlalchemy.future import select
 from endpoints.get_transactions import search_for_transactions, TxSearch, TxModel
 
@@ -20,6 +20,9 @@ class TransactionsReceivedAndSpent(BaseModel):
 
 class TransactionForAddressResponse(BaseModel):
     transactions: List[TransactionsReceivedAndSpent]
+
+class TransactionCount(BaseModel):
+    total: int
 
 
 @app.get("/addresses/{kaspaAddress}/transactions",
@@ -103,3 +106,23 @@ async def get_full_transactions_for_address(
         tx_ids_in_page = [x[0] for x in tx_within_limit_offset.all()]
 
     return await search_for_transactions(TxSearch(transactionIds=tx_ids_in_page), fields)
+
+@app.get("/addresses/{kaspaAddress}/transactions-count",
+         response_model=TransactionCount,
+         tags=["Kaspa addresses"])
+async def get_transaction_count_for_address(
+    kaspaAddress: str = Path(
+            description="Kaspa address as string e.g. "
+                        "kaspa:pzhh76qc82wzduvsrd9xh4zde9qhp0xc8rl7qu2mvl2e42uvdqt75zrcgpm00",
+            regex="^kaspa\:[a-z0-9]{61}$")
+):
+    """
+    Count the number of transactions associated with this address
+    """
+
+    async with async_session() as s:
+        count_query = select(func.count(TxAddrMapping.transaction_id)).filter(TxAddrMapping.address == kaspaAddress)
+
+        tx_count = await s.execute(count_query)
+
+    return TransactionCount(total=tx_count.scalar())
