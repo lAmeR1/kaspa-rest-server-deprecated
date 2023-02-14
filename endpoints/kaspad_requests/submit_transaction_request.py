@@ -53,7 +53,7 @@ class TxModel(BaseModel):
 
 class SubmitTransactionRequest(BaseModel):
     transaction: TxModel
-    allowOrphan: bool
+    allowOrphan: bool = True
 
 
 class SubmitTransactionResponse(BaseModel):
