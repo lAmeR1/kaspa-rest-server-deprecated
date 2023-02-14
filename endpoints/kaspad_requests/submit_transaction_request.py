@@ -61,9 +61,9 @@ class SubmitTransactionResponse(BaseModel):
     error: str | None
 
 
-@app.post("/kaspad/submitTransactionRequest",
+@app.post("/transactions",
           response_model=SubmitTransactionResponse,
-          tags=["Kaspad direct actions"],
+          tags=["Kaspa transactions"],
           response_model_exclude_unset=True)
 async def submit_a_new_transaction(body: SubmitTransactionRequest):
     """
@@ -116,7 +116,6 @@ async def submit_a_new_transaction(body: SubmitTransactionRequest):
     ],
     "lockTime": 0,
     "subnetworkId": "0000000000000000000000000000000000000000"
-  },
-  "allowOrphan": true
+  }
 }
 """
