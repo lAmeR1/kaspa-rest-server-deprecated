@@ -115,9 +115,7 @@ async def submit_a_new_transaction(body: SubmitTransactionRequest):
       }
     ],
     "lockTime": 0,
-    "subnetworkId": "0000000000000000000000000000000000000000",
-    "gas": 2069,
-    "payload": "0000000000000000000000000000000000000000000000000000000000000000"
+    "subnetworkId": "0000000000000000000000000000000000000000"
   },
   "allowOrphan": true
 }
