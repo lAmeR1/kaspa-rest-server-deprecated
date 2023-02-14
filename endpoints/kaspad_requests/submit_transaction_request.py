@@ -70,6 +70,6 @@ class SubmitTransactionResponse(BaseModel):
           response_model_exclude_unset=True)
 async def submit_a_new_transaction(body: SubmitTransactionRequest):
     """
-    Forwards the body to directly to kaspad with the command submitTransactionRequest
+    Forwards the body directly to kaspad with the command submitTransactionRequest
     """
     pass
