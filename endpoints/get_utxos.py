@@ -32,7 +32,7 @@ class UtxoResponse(BaseModel):
 @app.get("/addresses/{kaspaAddress}/utxos", response_model=List[UtxoResponse], tags=["Kaspa addresses"])
 async def get_utxos_for_address(kaspaAddress: str = Path(
     description="Kaspa address as string e.g. kaspa:qqkqkzjvr7zwxxmjxjkmxxdwju9kjs6e9u82uh59z07vgaks6gg62v8707g73",
-    regex="^kaspa\:[a-z0-9]{61}$")):
+    regex="^kaspa\:[a-z0-9]{61,63}$")):
     """
     Lists all open utxo for a given kaspa address
     """

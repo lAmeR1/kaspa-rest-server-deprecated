@@ -15,7 +15,7 @@ class BalanceResponse(BaseModel):
 async def get_balance_from_kaspa_address(
         kaspaAddress: str = Path(
             description="Kaspa address as string e.g. kaspa:pzhh76qc82wzduvsrd9xh4zde9qhp0xc8rl7qu2mvl2e42uvdqt75zrcgpm00",
-            regex="^kaspa\:[a-z0-9]{61}$")):
+            regex="^kaspa\:[a-z0-9]{61,63}$")):
     """
     Get balance for a given kaspa address
     """
