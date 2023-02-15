@@ -28,7 +28,8 @@ class TransactionCount(BaseModel):
 @app.get("/addresses/{kaspaAddress}/transactions",
          response_model=TransactionForAddressResponse,
          response_model_exclude_unset=True,
-         tags=["Kaspa addresses"])
+         tags=["Kaspa addresses"],
+         deprecated=True)
 async def get_transactions_for_address(
         kaspaAddress: str = Path(
             description="Kaspa address as string e.g. "
