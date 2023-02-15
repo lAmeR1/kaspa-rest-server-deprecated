@@ -1,5 +1,5 @@
 # encoding: utf-8
-import time
+
 from typing import List
 
 from pydantic import BaseModel
@@ -7,52 +7,39 @@ from pydantic import BaseModel
 from server import app, kaspad_client
 
 
-class TxOutpoint(BaseModel):
+class SubmitTxOutpoint(BaseModel):
     transactionId: str
     index: int
 
 
-class TxInput(BaseModel):
-    previousOutpoint: TxOutpoint
+class SubmitTxInput(BaseModel):
+    previousOutpoint: SubmitTxOutpoint
     signatureScript: str
     sequence: int
     sigOpCount: int
 
 
-class TxScriptPublicKey(BaseModel):
+class SubmitTxScriptPublicKey(BaseModel):
     version: int
     scriptPublicKey: str
 
 
-class TxOutputVerboseData(BaseModel):
-    scriptPublicKeyType: str
-    scriptPublicKeyAddress: str
-
-
-class TxOutput(BaseModel):
+class SubmitTxOutput(BaseModel):
     amount: int
-    scriptPublicKey: TxScriptPublicKey
+    scriptPublicKey: SubmitTxScriptPublicKey
     # verboseData: TxOutputVerboseData | None
 
 
-class TxVerboseData(BaseModel):
-    transactionId: str
-    hash: str
-    mass: int
-    blockHash: str
-    blockTime: int
-
-
-class TxModel(BaseModel):
+class SubmitTxModel(BaseModel):
     version: int
-    inputs: List[TxInput]
-    outputs: List[TxOutput]
+    inputs: List[SubmitTxInput]
+    outputs: List[SubmitTxOutput]
     lockTime: int | None = 0
     subnetworkId: str | None
 
 
 class SubmitTransactionRequest(BaseModel):
-    transaction: TxModel
+    transaction: SubmitTxModel
     allowOrphan: bool = True
 
 
