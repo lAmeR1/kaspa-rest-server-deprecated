@@ -3,6 +3,7 @@
 from typing import List
 
 from pydantic import BaseModel
+from starlette.responses import JSONResponse
 
 from server import app, kaspad_client
 
@@ -49,9 +50,10 @@ class SubmitTransactionResponse(BaseModel):
 
 
 @app.post("/transactions",
-          response_model=SubmitTransactionResponse,
           tags=["Kaspa transactions"],
-          response_model_exclude_unset=True)
+          response_model_exclude_unset=True,
+          responses={200: {"model": SubmitTransactionResponse},
+                       400: {"model": SubmitTransactionResponse}})
 async def submit_a_new_transaction(body: SubmitTransactionRequest):
     """
     Forwards the body directly to kaspad with the command submitTransactionRequest
@@ -60,14 +62,22 @@ async def submit_a_new_transaction(body: SubmitTransactionRequest):
                                           params=body.dict())
 
     tx_resp = tx_resp["submitTransactionResponse"]
+
+    # if error in response
     if "error" in tx_resp:
+        return JSONResponse(status_code=400,
+                            content={"error": tx_resp["error"].get("message", "")})
+
+    # if transactionId is in response
+    elif "transactionId" in tx_resp:
         return {
-            "error": tx_resp["error"].get("message", "")
+            "transactionId": tx_resp["transactionId"]
         }
 
-    return {
-        "transactionId": tx_resp["transactionId"]
-    }
+    # something else went wrong
+    else:
+        return JSONResponse(status_code=400,
+                            content={"error": str(tx_resp)})
 
 
 """
