@@ -19,6 +19,7 @@ async def get_coinsupply():
     resp = await kaspad_client.request("getCoinSupplyRequest")
     return {
         "circulatingSupply": resp["getCoinSupplyResponse"]["circulatingSompi"],
+        "totalSupply": resp["getCoinSupplyResponse"]["circulatingSompi"],
         "maxSupply": resp["getCoinSupplyResponse"]["maxSompi"]
     }
 
@@ -34,3 +35,13 @@ async def get_circulating_coins(in_billion : bool = False):
         return str(round(float(coins) / 1000000000, 2))
     else:
         return coins
+
+
+@app.get("/info/coinsupply/total", tags=["Kaspa network info"],
+         response_class=PlainTextResponse)
+async def get_circulating_coins():
+    """
+    Get total amount of $KAS token as numerical value
+    """
+    resp = await kaspad_client.request("getCoinSupplyRequest")
+    return str(float(resp["getCoinSupplyResponse"]["circulatingSompi"]) / 100000000)
