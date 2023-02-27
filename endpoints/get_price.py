@@ -3,7 +3,7 @@
 from pydantic import BaseModel
 from starlette.responses import PlainTextResponse
 
-from helper import get_kas_price
+from helper import get_kas_price, get_kas_market_data
 from server import app
 
 
@@ -20,3 +20,12 @@ async def get_price(stringOnly: bool = False):
         return PlainTextResponse(content=str(get_kas_price()))
 
     return {"price": get_kas_price()}
+
+@app.get("/info/market-data",
+         tags=["Kaspa network info"],
+         include_in_schema=False)
+async def get_market_data():
+    """
+    Returns market data for kaspa.
+    """
+    return get_kas_market_data()
