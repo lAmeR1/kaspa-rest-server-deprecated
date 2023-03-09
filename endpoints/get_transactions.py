@@ -1,8 +1,10 @@
 # encoding: utf-8
+import time
 from typing import List
 
 from fastapi import Path, HTTPException
 from pydantic import BaseModel, parse_obj_as
+from sqlalchemy import Integer, cast
 from sqlalchemy.future import select
 
 from dbsession import async_session
@@ -10,19 +12,6 @@ from endpoints import filter_fields
 from models.Block import Block
 from models.Transaction import Transaction, TransactionOutput, TransactionInput
 from server import app
-
-
-class TxInput(BaseModel):
-    id: int
-    transaction_id: str
-    index: int
-    previous_outpoint_hash: str
-    previous_outpoint_index: str
-    signature_script: str
-    sig_op_count: str
-
-    class Config:
-        orm_mode = True
 
 
 class TxOutput(BaseModel):
@@ -34,6 +23,20 @@ class TxOutput(BaseModel):
     script_public_key_address: str
     script_public_key_type: str
     accepting_block_hash: str | None
+
+    class Config:
+        orm_mode = True
+
+
+class TxInput(BaseModel):
+    id: int
+    transaction_id: str
+    index: int
+    previous_outpoint_hash: str
+    previous_outpoint_index: str
+    previous_outpoint_resolved: TxOutput | None
+    signature_script: str
+    sig_op_count: str
 
     class Config:
         orm_mode = True
@@ -66,7 +69,8 @@ class TxSearch(BaseModel):
          response_model_exclude_unset=True)
 async def get_transaction(transactionId: str = Path(regex="[a-f0-9]{64}"),
                           inputs: bool = True,
-                          outputs: bool = True):
+                          outputs: bool = True,
+                          resolve_previous_outpoints: bool = False):
     """
     Get block information for a given block id
     """
@@ -87,9 +91,28 @@ async def get_transaction(transactionId: str = Path(regex="[a-f0-9]{64}"),
             tx_outputs = tx_outputs.scalars().all()
 
         if inputs:
-            tx_inputs = await s.execute(select(TransactionInput) \
-                                        .filter(TransactionInput.transaction_id == transactionId))
-            tx_inputs = tx_inputs.scalars().all()
+            if resolve_previous_outpoints:
+                tx_inputs = await s.execute(select(TransactionInput, TransactionOutput)
+                                            .join(TransactionOutput,
+                                                  (
+                                                          TransactionOutput.transaction_id == TransactionInput.previous_outpoint_hash) &
+                                                  (TransactionOutput.index == cast(
+                                                      TransactionInput.previous_outpoint_index, Integer)))
+                                            .filter(TransactionInput.transaction_id == transactionId))
+
+                tx_inputs = tx_inputs.all()
+
+                if resolve_previous_outpoints:
+                    for tx_in, tx_prev_outputs in tx_inputs:
+                        tx_in.previous_outpoint_resolved = tx_prev_outputs
+
+                # remove unneeded list
+                tx_inputs = [x[0] for x in tx_inputs]
+
+            else:
+                tx_inputs = await s.execute(select(TransactionInput) \
+                                            .filter(TransactionInput.transaction_id == transactionId))
+                tx_inputs = tx_inputs.scalars().all()
 
     if tx:
         return {
@@ -114,7 +137,8 @@ async def get_transaction(transactionId: str = Path(regex="[a-f0-9]{64}"),
           tags=["Kaspa transactions"],
           response_model_exclude_unset=True)
 async def search_for_transactions(txSearch: TxSearch,
-                                  fields: str = ""):
+                                  fields: str = "",
+                                  resolve_previous_outpoints: bool = False):
     """
     Get block information for a given block id
     """
@@ -128,12 +152,35 @@ async def search_for_transactions(txSearch: TxSearch,
 
         tx_list = tx_list.all()
 
+        t1 = time.time()
         if not fields or "inputs" in fields:
-            tx_inputs = await s.execute(select(TransactionInput) \
-                                        .filter(TransactionInput.transaction_id.in_(txSearch.transactionIds)))
-            tx_inputs = tx_inputs.scalars().all()
+            # join TxOutputs if needed
+            if resolve_previous_outpoints:
+                tx_inputs = await s.execute(select(TransactionInput, TransactionOutput)
+                                            .join(TransactionOutput,
+                                                  (
+                                                              TransactionOutput.transaction_id == TransactionInput.previous_outpoint_hash) &
+                                                  (TransactionOutput.index == cast(
+                                                      TransactionInput.previous_outpoint_index, Integer)))
+                                            .filter(TransactionInput.transaction_id.in_(txSearch.transactionIds)))
+
+            # without joining previous_tx_outputs
+            else:
+                tx_inputs = await s.execute(select(TransactionInput)
+                                            .filter(TransactionInput.transaction_id.in_(txSearch.transactionIds)))
+            tx_inputs = tx_inputs.all()
+
+            if resolve_previous_outpoints:
+                for tx_in, tx_prev_outputs in tx_inputs:
+                    tx_in.previous_outpoint_resolved = tx_prev_outputs
+
+            # remove unneeded list
+            tx_inputs = [x[0] for x in tx_inputs]
+
         else:
             tx_inputs = None
+
+        print(time.time() - t1)
 
         if not fields or "outputs" in fields:
             tx_outputs = await s.execute(select(TransactionOutput) \

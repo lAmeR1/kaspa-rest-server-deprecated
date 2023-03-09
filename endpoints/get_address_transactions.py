@@ -12,6 +12,7 @@ from server import app
 
 from models.TxAddrMapping import TxAddrMapping
 
+
 class TransactionsReceivedAndSpent(BaseModel):
     tx_received: str
     tx_spent: str | None
@@ -20,6 +21,7 @@ class TransactionsReceivedAndSpent(BaseModel):
 
 class TransactionForAddressResponse(BaseModel):
     transactions: List[TransactionsReceivedAndSpent]
+
 
 class TransactionCount(BaseModel):
     total: int
@@ -69,6 +71,7 @@ async def get_transactions_for_address(
         "transactions": tx_list
     }
 
+
 @app.get("/addresses/{kaspaAddress}/full-transactions",
          response_model=List[TxModel],
          response_model_exclude_unset=True,
@@ -88,7 +91,8 @@ async def get_full_transactions_for_address(
             ge=0,
             default=0),
         fields: str = "",
-    ):
+        resolve_previous_outputs: bool = False
+):
     """
     Get all transactions for a given address from database.
     And then get their related full transaction data
@@ -98,21 +102,24 @@ async def get_full_transactions_for_address(
         # Doing it this way as opposed to adding it directly in the IN clause
         # so I can re-use the same result in tx_list, TxInput and TxOutput
         tx_within_limit_offset = await s.execute(select(TxAddrMapping.transaction_id)
-            .filter(TxAddrMapping.address == kaspaAddress)
-            .limit(limit)
-            .offset(offset)
-            .order_by(TxAddrMapping.block_time.desc())
-        )
+                                                 .filter(TxAddrMapping.address == kaspaAddress)
+                                                 .limit(limit)
+                                                 .offset(offset)
+                                                 .order_by(TxAddrMapping.block_time.desc())
+                                                 )
 
         tx_ids_in_page = [x[0] for x in tx_within_limit_offset.all()]
 
-    return await search_for_transactions(TxSearch(transactionIds=tx_ids_in_page), fields)
+    return await search_for_transactions(TxSearch(transactionIds=tx_ids_in_page),
+                                         fields,
+                                         resolve_previous_outputs)
+
 
 @app.get("/addresses/{kaspaAddress}/transactions-count",
          response_model=TransactionCount,
          tags=["Kaspa addresses"])
 async def get_transaction_count_for_address(
-    kaspaAddress: str = Path(
+        kaspaAddress: str = Path(
             description="Kaspa address as string e.g. "
                         "kaspa:pzhh76qc82wzduvsrd9xh4zde9qhp0xc8rl7qu2mvl2e42uvdqt75zrcgpm00",
             regex="^kaspa\:[a-z0-9]{61,63}$")
