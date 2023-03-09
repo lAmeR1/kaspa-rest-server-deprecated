@@ -13,6 +13,10 @@ from server import app
 
 from models.TxAddrMapping import TxAddrMapping
 
+DESC_RESOLVE_PARAM = "Use this parameter if you want to fetch the TransactionInput previous outpoint details." \
+                     " Light fetches only the address and amount. Full fetches the whole TransactionOutput and " \
+                     "adds it into each TxInput."
+
 
 class TransactionsReceivedAndSpent(BaseModel):
     tx_received: str
@@ -32,6 +36,7 @@ class PreviousOutpointLookupMode(str, Enum):
     no = "no"
     light = "light"
     full = "full"
+
 
 @app.get("/addresses/{kaspaAddress}/transactions",
          response_model=TransactionForAddressResponse,
@@ -97,8 +102,9 @@ async def get_full_transactions_for_address(
             ge=0,
             default=0),
         fields: str = "",
-        resolve_previous_outputs: PreviousOutpointLookupMode = "no"
-):
+        resolve_previous_outpoints: PreviousOutpointLookupMode =
+        Query(default="no",
+              description=DESC_RESOLVE_PARAM)):
     """
     Get all transactions for a given address from database.
     And then get their related full transaction data
@@ -118,7 +124,7 @@ async def get_full_transactions_for_address(
 
     return await search_for_transactions(TxSearch(transactionIds=tx_ids_in_page),
                                          fields,
-                                         resolve_previous_outputs)
+                                         resolve_previous_outpoints)
 
 
 @app.get("/addresses/{kaspaAddress}/transactions-count",

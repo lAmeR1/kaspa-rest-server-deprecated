@@ -3,7 +3,7 @@ import time
 from enum import Enum
 from typing import List
 
-from fastapi import Path, HTTPException
+from fastapi import Path, HTTPException, Query
 from pydantic import BaseModel, parse_obj_as
 from sqlalchemy import Integer, cast
 from sqlalchemy.future import select
@@ -13,6 +13,10 @@ from endpoints import filter_fields
 from models.Block import Block
 from models.Transaction import Transaction, TransactionOutput, TransactionInput
 from server import app
+
+DESC_RESOLVE_PARAM = "Use this parameter if you want to fetch the TransactionInput previous outpoint details." \
+                     " Light fetches only the address and amount. Full fetches the whole TransactionOutput and " \
+                     "adds it into each TxInput."
 
 
 class TxOutput(BaseModel):
@@ -79,7 +83,9 @@ class PreviousOutpointLookupMode(str, Enum):
 async def get_transaction(transactionId: str = Path(regex="[a-f0-9]{64}"),
                           inputs: bool = True,
                           outputs: bool = True,
-                          resolve_previous_outpoints: PreviousOutpointLookupMode = "no"):
+                          resolve_previous_outpoints: PreviousOutpointLookupMode =
+                          Query(default="no",
+                                description=DESC_RESOLVE_PARAM)):
     """
     Get block information for a given block id
     """
@@ -103,9 +109,11 @@ async def get_transaction(transactionId: str = Path(regex="[a-f0-9]{64}"),
             if resolve_previous_outpoints in ["light", "full"]:
                 tx_inputs = await s.execute(select(TransactionInput, TransactionOutput)
                                             .outerjoin(TransactionOutput,
-                                                  (TransactionOutput.transaction_id == TransactionInput.previous_outpoint_hash) &
-                                                  (TransactionOutput.index == cast(TransactionInput.previous_outpoint_index, Integer)),
-                                                  )
+                                                       (
+                                                               TransactionOutput.transaction_id == TransactionInput.previous_outpoint_hash) &
+                                                       (TransactionOutput.index == cast(
+                                                           TransactionInput.previous_outpoint_index, Integer)),
+                                                       )
                                             .filter(TransactionInput.transaction_id == transactionId))
 
                 tx_inputs = tx_inputs.all()
@@ -157,7 +165,9 @@ async def get_transaction(transactionId: str = Path(regex="[a-f0-9]{64}"),
           response_model_exclude_unset=True)
 async def search_for_transactions(txSearch: TxSearch,
                                   fields: str = "",
-                                  resolve_previous_outpoints: PreviousOutpointLookupMode = "no"):
+                                  resolve_previous_outpoints: PreviousOutpointLookupMode =
+                                  Query(default="no",
+                                        description=DESC_RESOLVE_PARAM)):
     """
     Get block information for a given block id
     """
@@ -176,8 +186,8 @@ async def search_for_transactions(txSearch: TxSearch,
             if resolve_previous_outpoints in ["light", "full"]:
                 tx_inputs = await s.execute(select(TransactionInput, TransactionOutput)
                                             .outerjoin(TransactionOutput,
-                                                  (TransactionOutput.transaction_id == TransactionInput.previous_outpoint_hash) &
-                                                  (TransactionOutput.index == cast(TransactionInput.previous_outpoint_index, Integer)))
+                                                       (TransactionOutput.transaction_id == TransactionInput.previous_outpoint_hash) &
+                                                       (TransactionOutput.index == cast(TransactionInput.previous_outpoint_index, Integer)))
                                             .filter(TransactionInput.transaction_id.in_(txSearch.transactionIds)))
 
             # without joining previous_tx_outputs
