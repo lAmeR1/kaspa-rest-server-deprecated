@@ -1,5 +1,6 @@
 # encoding: utf-8
 import time
+from enum import Enum
 from typing import List
 
 from fastapi import Path, HTTPException
@@ -35,6 +36,8 @@ class TxInput(BaseModel):
     previous_outpoint_hash: str
     previous_outpoint_index: str
     previous_outpoint_resolved: TxOutput | None
+    previous_outpoint_address: str | None
+    previous_outpoint_amount: int | None
     signature_script: str
     sig_op_count: str
 
@@ -63,6 +66,12 @@ class TxSearch(BaseModel):
     transactionIds: List[str]
 
 
+class PreviousOutpointLookupMode(str, Enum):
+    no = "no"
+    light = "light"
+    full = "full"
+
+
 @app.get("/transactions/{transactionId}",
          response_model=TxModel,
          tags=["Kaspa transactions"],
@@ -70,7 +79,7 @@ class TxSearch(BaseModel):
 async def get_transaction(transactionId: str = Path(regex="[a-f0-9]{64}"),
                           inputs: bool = True,
                           outputs: bool = True,
-                          resolve_previous_outpoints: bool = False):
+                          resolve_previous_outpoints: PreviousOutpointLookupMode = "no"):
     """
     Get block information for a given block id
     """
@@ -91,7 +100,7 @@ async def get_transaction(transactionId: str = Path(regex="[a-f0-9]{64}"),
             tx_outputs = tx_outputs.scalars().all()
 
         if inputs:
-            if resolve_previous_outpoints:
+            if resolve_previous_outpoints in ["light", "full"]:
                 tx_inputs = await s.execute(select(TransactionInput, TransactionOutput)
                                             .join(TransactionOutput,
                                                   (
@@ -102,9 +111,12 @@ async def get_transaction(transactionId: str = Path(regex="[a-f0-9]{64}"),
 
                 tx_inputs = tx_inputs.all()
 
-                if resolve_previous_outpoints:
+                if resolve_previous_outpoints in ["light", "full"]:
                     for tx_in, tx_prev_outputs in tx_inputs:
-                        tx_in.previous_outpoint_resolved = tx_prev_outputs
+                        tx_in.previous_outpoint_amount = tx_prev_outputs.amount
+                        tx_in.previous_outpoint_address = tx_prev_outputs.script_public_key_address
+                        if resolve_previous_outpoints == "full":
+                            tx_in.previous_outpoint_resolved = tx_prev_outputs
 
                 # remove unneeded list
                 tx_inputs = [x[0] for x in tx_inputs]
@@ -138,7 +150,7 @@ async def get_transaction(transactionId: str = Path(regex="[a-f0-9]{64}"),
           response_model_exclude_unset=True)
 async def search_for_transactions(txSearch: TxSearch,
                                   fields: str = "",
-                                  resolve_previous_outpoints: bool = False):
+                                  resolve_previous_outpoints: PreviousOutpointLookupMode = "no"):
     """
     Get block information for a given block id
     """
@@ -155,11 +167,11 @@ async def search_for_transactions(txSearch: TxSearch,
         t1 = time.time()
         if not fields or "inputs" in fields:
             # join TxOutputs if needed
-            if resolve_previous_outpoints:
+            if resolve_previous_outpoints in ["light", "full"]:
                 tx_inputs = await s.execute(select(TransactionInput, TransactionOutput)
                                             .join(TransactionOutput,
                                                   (
-                                                              TransactionOutput.transaction_id == TransactionInput.previous_outpoint_hash) &
+                                                          TransactionOutput.transaction_id == TransactionInput.previous_outpoint_hash) &
                                                   (TransactionOutput.index == cast(
                                                       TransactionInput.previous_outpoint_index, Integer)))
                                             .filter(TransactionInput.transaction_id.in_(txSearch.transactionIds)))
@@ -170,9 +182,12 @@ async def search_for_transactions(txSearch: TxSearch,
                                             .filter(TransactionInput.transaction_id.in_(txSearch.transactionIds)))
             tx_inputs = tx_inputs.all()
 
-            if resolve_previous_outpoints:
+            if resolve_previous_outpoints in ["light", "full"]:
                 for tx_in, tx_prev_outputs in tx_inputs:
-                    tx_in.previous_outpoint_resolved = tx_prev_outputs
+                    tx_in.previous_outpoint_amount = tx_prev_outputs.amount
+                    tx_in.previous_outpoint_address = tx_prev_outputs.script_public_key_address
+                    if resolve_previous_outpoints == "full":
+                        tx_in.previous_outpoint_resolved = tx_prev_outputs
 
             # remove unneeded list
             tx_inputs = [x[0] for x in tx_inputs]

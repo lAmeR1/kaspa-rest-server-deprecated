@@ -1,4 +1,5 @@
 # encoding: utf-8
+from enum import Enum
 from typing import List
 
 from fastapi import Path, Query
@@ -26,6 +27,11 @@ class TransactionForAddressResponse(BaseModel):
 class TransactionCount(BaseModel):
     total: int
 
+
+class PreviousOutpointLookupMode(str, Enum):
+    no = "no"
+    light = "light"
+    full = "full"
 
 @app.get("/addresses/{kaspaAddress}/transactions",
          response_model=TransactionForAddressResponse,
@@ -91,7 +97,7 @@ async def get_full_transactions_for_address(
             ge=0,
             default=0),
         fields: str = "",
-        resolve_previous_outputs: bool = False
+        resolve_previous_outputs: PreviousOutpointLookupMode = "no"
 ):
     """
     Get all transactions for a given address from database.
