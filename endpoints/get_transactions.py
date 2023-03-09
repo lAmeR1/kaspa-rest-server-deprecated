@@ -1,5 +1,5 @@
 # encoding: utf-8
-import time
+
 from enum import Enum
 from typing import List
 
@@ -84,7 +84,7 @@ async def get_transaction(transactionId: str = Path(regex="[a-f0-9]{64}"),
                           inputs: bool = True,
                           outputs: bool = True,
                           resolve_previous_outpoints: PreviousOutpointLookupMode =
-                          Query(default="no",
+                          Query(default=PreviousOutpointLookupMode.no,
                                 description=DESC_RESOLVE_PARAM)):
     """
     Get block information for a given block id
@@ -109,11 +109,8 @@ async def get_transaction(transactionId: str = Path(regex="[a-f0-9]{64}"),
             if resolve_previous_outpoints in ["light", "full"]:
                 tx_inputs = await s.execute(select(TransactionInput, TransactionOutput)
                                             .outerjoin(TransactionOutput,
-                                                       (
-                                                               TransactionOutput.transaction_id == TransactionInput.previous_outpoint_hash) &
-                                                       (TransactionOutput.index == cast(
-                                                           TransactionInput.previous_outpoint_index, Integer)),
-                                                       )
+                                                       (TransactionOutput.transaction_id == TransactionInput.previous_outpoint_hash) &
+                                                       (TransactionOutput.index == cast(TransactionInput.previous_outpoint_index, Integer)))
                                             .filter(TransactionInput.transaction_id == transactionId))
 
                 tx_inputs = tx_inputs.all()
@@ -166,7 +163,7 @@ async def get_transaction(transactionId: str = Path(regex="[a-f0-9]{64}"),
 async def search_for_transactions(txSearch: TxSearch,
                                   fields: str = "",
                                   resolve_previous_outpoints: PreviousOutpointLookupMode =
-                                  Query(default="no",
+                                  Query(default=PreviousOutpointLookupMode.no,
                                         description=DESC_RESOLVE_PARAM)):
     """
     Get block information for a given block id
