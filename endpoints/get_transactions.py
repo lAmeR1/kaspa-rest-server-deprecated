@@ -102,17 +102,24 @@ async def get_transaction(transactionId: str = Path(regex="[a-f0-9]{64}"),
         if inputs:
             if resolve_previous_outpoints in ["light", "full"]:
                 tx_inputs = await s.execute(select(TransactionInput, TransactionOutput)
-                                            .join(TransactionOutput,
-                                                  (
-                                                          TransactionOutput.transaction_id == TransactionInput.previous_outpoint_hash) &
-                                                  (TransactionOutput.index == cast(
-                                                      TransactionInput.previous_outpoint_index, Integer)))
+                                            .outerjoin(TransactionOutput,
+                                                  (TransactionOutput.transaction_id == TransactionInput.previous_outpoint_hash) &
+                                                  (TransactionOutput.index == cast(TransactionInput.previous_outpoint_index, Integer)),
+                                                  )
                                             .filter(TransactionInput.transaction_id == transactionId))
 
                 tx_inputs = tx_inputs.all()
 
                 if resolve_previous_outpoints in ["light", "full"]:
                     for tx_in, tx_prev_outputs in tx_inputs:
+                        # it is possible, that the old tx is not in database. Leave fields empty
+                        if not tx_prev_outputs:
+                            tx_in.previous_outpoint_amount = None
+                            tx_in.previous_outpoint_address = None
+                            if resolve_previous_outpoints == "full":
+                                tx_in.previous_outpoint_resolved = None
+                            continue
+
                         tx_in.previous_outpoint_amount = tx_prev_outputs.amount
                         tx_in.previous_outpoint_address = tx_prev_outputs.script_public_key_address
                         if resolve_previous_outpoints == "full":
@@ -164,16 +171,13 @@ async def search_for_transactions(txSearch: TxSearch,
 
         tx_list = tx_list.all()
 
-        t1 = time.time()
         if not fields or "inputs" in fields:
             # join TxOutputs if needed
             if resolve_previous_outpoints in ["light", "full"]:
                 tx_inputs = await s.execute(select(TransactionInput, TransactionOutput)
-                                            .join(TransactionOutput,
-                                                  (
-                                                          TransactionOutput.transaction_id == TransactionInput.previous_outpoint_hash) &
-                                                  (TransactionOutput.index == cast(
-                                                      TransactionInput.previous_outpoint_index, Integer)))
+                                            .outerjoin(TransactionOutput,
+                                                  (TransactionOutput.transaction_id == TransactionInput.previous_outpoint_hash) &
+                                                  (TransactionOutput.index == cast(TransactionInput.previous_outpoint_index, Integer)))
                                             .filter(TransactionInput.transaction_id.in_(txSearch.transactionIds)))
 
             # without joining previous_tx_outputs
@@ -184,6 +188,15 @@ async def search_for_transactions(txSearch: TxSearch,
 
             if resolve_previous_outpoints in ["light", "full"]:
                 for tx_in, tx_prev_outputs in tx_inputs:
+
+                    # it is possible, that the old tx is not in database. Leave fields empty
+                    if not tx_prev_outputs:
+                        tx_in.previous_outpoint_amount = None
+                        tx_in.previous_outpoint_address = None
+                        if resolve_previous_outpoints == "full":
+                            tx_in.previous_outpoint_resolved = None
+                        continue
+
                     tx_in.previous_outpoint_amount = tx_prev_outputs.amount
                     tx_in.previous_outpoint_address = tx_prev_outputs.script_public_key_address
                     if resolve_previous_outpoints == "full":
@@ -194,8 +207,6 @@ async def search_for_transactions(txSearch: TxSearch,
 
         else:
             tx_inputs = None
-
-        print(time.time() - t1)
 
         if not fields or "outputs" in fields:
             tx_outputs = await s.execute(select(TransactionOutput) \
