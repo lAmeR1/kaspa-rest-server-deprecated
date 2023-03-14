@@ -1,10 +1,11 @@
 # encoding: utf-8
-import time
+import json
 
 from pydantic import BaseModel
 from sqlalchemy import select
 
 from dbsession import async_session
+from helper import KeyValueStore
 from models.Block import Block
 from server import app, kaspad_client
 
@@ -52,31 +53,32 @@ async def get_max_hashrate():
     """
     Returns the current hashrate for Kaspa network in TH/s.
     """
-    global MAXHASH_CACHE
-
-    if time.time() - MAXHASH_CACHE[0] < 60 * 5:
-        return MAXHASH_CACHE[1]
+    maxhash_last_value = json.loads((await KeyValueStore.get("maxhash_last_value")) or "{}")
+    maxhash_last_bluescore = int((await KeyValueStore.get("maxhash_last_bluescore")) or 0)
+    print(f"Start at {maxhash_last_bluescore}")
 
     async with async_session() as s:
-        tx = await s.execute(select(Block)
-                             .order_by(Block.difficulty.desc()).limit(1))
+        block = (await s.execute(select(Block)
+                                 .filter(Block.blue_score > maxhash_last_bluescore)
+                                 .order_by(Block.difficulty.desc()).limit(1))).scalar()
 
-        tx = tx.first()
+    hashrate_new = block.difficulty * 2
+    hashrate_old = maxhash_last_value.get("blockheader", {}).get("difficulty", 0) * 2
 
-    hashrate = tx[0].difficulty * 2
-    hashrate_in_th = hashrate / 1_000_000_000_000
+    await KeyValueStore.set("maxhash_last_bluescore", str(block.blue_score))
 
-    response = {"hashrate": hashrate_in_th,
-                "blockheader":
-                    {
-                        "hash": tx[0].hash,
-                        "timestamp": tx[0].timestamp.isoformat(),
-                        "difficulty": tx[0].difficulty,
-                        "daaScore": tx[0].daa_score,
-                        "blueScore": tx[0].blue_score
+    if hashrate_new > hashrate_old:
+        response = {"hashrate":  hashrate_new / 1_000_000_000_000,
+                    "blockheader":
+                        {
+                            "hash": block.hash,
+                            "timestamp": block.timestamp.isoformat(),
+                            "difficulty": block.difficulty,
+                            "daaScore": block.daa_score,
+                            "blueScore": block.blue_score
+                        }
                     }
-                }
+        await KeyValueStore.set("maxhash_last_value", json.dumps(response))
+        return response
 
-    MAXHASH_CACHE = (time.time(), response)
-
-    return response
+    return maxhash_last_value
