@@ -1,9 +1,14 @@
 # encoding: utf-8
 import hashlib
+from datetime import datetime, timedelta
 from typing import List
 
+from fastapi import HTTPException
 from pydantic import BaseModel
+from sqlalchemy import select
 
+from dbsession import async_session
+from models.Transaction import Transaction
 from server import app, kaspad_client
 
 
@@ -27,6 +32,16 @@ async def health_state():
     await kaspad_client.initialize_all()
 
     kaspads = []
+
+    async with async_session() as s:
+        last_block_time = (await s.execute(select(Transaction.block_time)
+                                           .limit(1)
+                                           .order_by(Transaction.block_time.desc()))).scalar()
+
+    time_diff = datetime.now() - datetime.fromtimestamp(last_block_time / 1000)
+
+    if time_diff > timedelta(minutes=10):
+        raise HTTPException(status_code=500, detail="Transactions not up to date")
 
     for i, kaspad_info in enumerate(kaspad_client.kaspads):
         kaspads.append({
