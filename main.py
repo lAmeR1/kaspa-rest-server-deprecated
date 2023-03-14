@@ -31,6 +31,10 @@ print(
     f"{get_virtual_selected_parent_blue_score} {periodical_blue_score} {get_transactions_for_address}"
     f"{submit_a_new_transaction} {get_price}")
 
+if os.getenv('VSPC_REQUEST') == 'true':
+    from endpoints.get_vspc import get_virtual_selected_parent_chain_from_block
+    print(get_virtual_selected_parent_chain_from_block)
+
 BLOCKS_TASK = None  # type: Task
 
 
