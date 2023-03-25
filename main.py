@@ -10,6 +10,7 @@ import sockets
 from endpoints import get_balance, get_utxos, get_blocks, get_blockdag, get_circulating_supply, get_kaspad_info, \
     get_network, get_price
 from endpoints.get_address_transactions import get_transactions_for_address
+from endpoints.get_address_labels import get_address_label
 from endpoints.get_blockreward import get_blockreward
 from endpoints.get_halving import get_halving
 from endpoints.get_hashrate import get_hashrate
@@ -29,7 +30,7 @@ print(
     f"{get_kaspad_info}, {get_network}, {get_marketcap}, {get_hashrate}, {get_blockreward}, {sockets.join_room}"
     f"{periodic_coin_supply} {periodical_blockdag} {get_halving} {health_state} {get_transaction}"
     f"{get_virtual_selected_parent_blue_score} {periodical_blue_score} {get_transactions_for_address}"
-    f"{submit_a_new_transaction} {get_price}")
+    f"{submit_a_new_transaction} {get_price} {get_address_label}")
 
 if os.getenv('VSPC_REQUEST') == 'true':
     from endpoints.get_vspc import get_virtual_selected_parent_chain_from_block
