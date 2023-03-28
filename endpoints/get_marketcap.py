@@ -16,7 +16,7 @@ async def get_marketcap(stringOnly: bool = False):
     """
     Get $KAS price and market cap. Price info is from coingecko.com
     """
-    kas_price = get_kas_price()
+    kas_price = await get_kas_price()
     resp = await kaspad_client.request("getCoinSupplyRequest")
     mcap = round(float(resp["getCoinSupplyResponse"]["circulatingSompi"]) / 100000000 * kas_price)
 

@@ -33,6 +33,7 @@ print(
 
 if os.getenv('VSPC_REQUEST') == 'true':
     from endpoints.get_vspc import get_virtual_selected_parent_chain_from_block
+
     print(get_virtual_selected_parent_chain_from_block)
 
 BLOCKS_TASK = None  # type: Task

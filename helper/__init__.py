@@ -1,18 +1,26 @@
 # encoding: utf-8
-import requests
-from cachetools.func import ttl_cache
+import aiohttp
+from aiocache import cached
 
 
-@ttl_cache(ttl=60)
-def get_kas_price():
-    resp = requests.get("https://api.coingecko.com/api/v3/simple/price",
-                        params={"ids": "kaspa",
-                                "vs_currencies": "usd"})
-    if resp.status_code == 200:
-        return resp.json()["kaspa"]["usd"]
+@cached(ttl=120)
+async def get_kas_price():
+    async with aiohttp.ClientSession() as session:
+        async with session.get("https://api.coingecko.com/api/v3/simple/price",
+                               params={"ids": "kaspa",
+                                       "vs_currencies": "usd"},
+                               timeout=5) as resp:
+            if resp.status == 200:
+                return (await resp.json())["kaspa"]["usd"]
+            else:
+                raise Exception("Did not retrieve the price.")
 
-@ttl_cache(ttl=60)
-def get_kas_market_data():
-    resp = requests.get("https://api.coingecko.com/api/v3/coins/kaspa")
-    if resp.status_code == 200:
-        return resp.json()["market_data"]
+
+@cached(ttl=60)
+async def get_kas_market_data():
+    async with aiohttp.ClientSession() as session:
+        async with session.get("https://api.coingecko.com/api/v3/coins/kaspa", timeout=5) as resp:
+            if resp.status == 200:
+                return (await resp.json())["market_data"]
+            else:
+                raise Exception("Did not retrieve the market data.")
