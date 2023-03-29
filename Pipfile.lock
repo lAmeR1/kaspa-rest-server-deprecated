@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "00ec733e0cc7c63b667c1ea592edfb3a802c723f541f86191af3853af4d9e967"
+            "sha256": "79fd1119e3bf8411842d89a3a7c370d4b5741b33f2f181fadf934a57e5553e63"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -190,14 +190,6 @@
             ],
             "markers": "python_version >= '3.6'",
             "version": "==22.2.0"
-        },
-        "bidict": {
-            "hashes": [
-                "sha256:1e0f7f74e4860e6d0943a05d4134c63a2fad86f3d4732fb265bd79e4e856d81d",
-                "sha256:6ef212238eb884b664f28da76f33f1d28b260f665fc737b413b287d5487d1e7b"
-            ],
-            "markers": "python_full_version >= '3.7.0'",
-            "version": "==0.22.1"
         },
         "cachetools": {
             "hashes": [
@@ -763,22 +755,6 @@
             "markers": "python_full_version >= '3.7.0'",
             "version": "==1.10.7"
         },
-        "python-engineio": {
-            "hashes": [
-                "sha256:11f9c35b775fe70e0a25f67b16d5b69fbfafc368cdd87eeb6f4135a475c88e50",
-                "sha256:bcc035c70ecc30acc3cfd49ef19aca6c51fa6caaadd0fa58c2d7480f50d04cf2"
-            ],
-            "markers": "python_version >= '3.6'",
-            "version": "==4.4.0"
-        },
-        "python-socketio": {
-            "hashes": [
-                "sha256:7adb8867aac1c2929b9c1429f1c02e12ca4c36b67c807967393e367dfbb01441",
-                "sha256:e714f4dddfaaa0cb0e37a1e2deef2bb60590a5b9fea9c343dd8ca5e688416fd9"
-            ],
-            "index": "pypi",
-            "version": "==5.8.0"
-        },
         "requests": {
             "hashes": [
                 "sha256:64299f4909223da747622c030b781c0d7811e359c37124b4bd368fb8c6518baa",
@@ -789,11 +765,11 @@
         },
         "setuptools": {
             "hashes": [
-                "sha256:2ee892cd5f29f3373097f5a814697e397cf3ce313616df0af11231e2ad118077",
-                "sha256:b78aaa36f6b90a074c1fa651168723acbf45d14cb1196b6f02c0fd07f17623b2"
+                "sha256:257de92a9d50a60b8e22abfcbb771571fde0dbf3ec234463212027a4eeecbe9a",
+                "sha256:e728ca814a823bf7bf60162daf9db95b93d532948c4c0bea762ce62f60189078"
             ],
             "markers": "python_full_version >= '3.7.0'",
-            "version": "==67.6.0"
+            "version": "==67.6.1"
         },
         "sniffio": {
             "hashes": [

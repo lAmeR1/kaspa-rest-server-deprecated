@@ -21,6 +21,7 @@ async def get_price(stringOnly: bool = False):
 
     return {"price": await get_kas_price()}
 
+
 @app.get("/info/market-data",
          tags=["Kaspa network info"],
          include_in_schema=False)

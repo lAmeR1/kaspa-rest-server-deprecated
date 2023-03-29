@@ -1,7 +1,8 @@
 # encoding: utf-8
+import logging
 import os
 
-import socketio
+import fastapi.logger
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -12,8 +13,7 @@ from starlette.responses import JSONResponse
 
 from kaspad.KaspadMultiClient import KaspadMultiClient
 
-sio = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins=[])
-socket_app = socketio.ASGIApp(sio)
+fastapi.logger.logger.setLevel(logging.WARNING)
 
 app = FastAPI(
     title="Kaspa REST-API server",
@@ -28,8 +28,6 @@ app = FastAPI(
 )
 
 app.add_middleware(GZipMiddleware, minimum_size=500)
-
-app.mount("/ws", socket_app)
 
 origins = ["*"]
 

@@ -1,4 +1,5 @@
 # encoding: utf-8
+import logging
 import os
 
 from starlette.responses import RedirectResponse
@@ -14,6 +15,7 @@ from endpoints.get_marketcap import get_marketcap
 from endpoints.get_transactions import get_transaction
 from endpoints.get_virtual_chain_blue_score import get_virtual_selected_parent_blue_score
 from endpoints.kaspad_requests.submit_transaction_request import submit_a_new_transaction
+from helper import get_kas_market_data
 from server import app, kaspad_client
 
 print(
@@ -31,6 +33,9 @@ if os.getenv('VSPC_REQUEST') == 'true':
 
 @app.on_event("startup")
 async def startup():
+    # get kaspad
+    await get_kas_market_data()
+
     # find kaspad before staring webserver
     await kaspad_client.initialize_all()
 
@@ -39,6 +44,10 @@ async def startup():
 async def docs_redirect():
     return RedirectResponse(url='/docs')
 
+
+logging.basicConfig(format="%(asctime)s::%(levelname)s::%(name)s::%(message)s",
+                    level=logging.DEBUG if os.getenv("DEBUG", False) else logging.INFO,
+                    handlers=[logging.StreamHandler()])
 
 if __name__ == '__main__':
     if os.getenv("DEBUG"):
