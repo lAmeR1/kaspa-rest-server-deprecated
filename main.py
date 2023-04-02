@@ -34,6 +34,8 @@ if os.getenv('VSPC_REQUEST') == 'true':
 
 @app.on_event("startup")
 async def startup():
+    # create db if needed
+    await create_all(drop=False)
     # get kaspad
     await get_kas_market_data()
 
@@ -49,8 +51,6 @@ async def docs_redirect():
 logging.basicConfig(format="%(asctime)s::%(levelname)s::%(name)s::%(message)s",
                     level=logging.DEBUG if os.getenv("DEBUG", False) else logging.INFO,
                     handlers=[logging.StreamHandler()])
-
-create_all(drop=False)
 
 if __name__ == '__main__':
     if os.getenv("DEBUG"):
