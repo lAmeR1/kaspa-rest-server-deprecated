@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, BigInteger, Boolean, ForeignKey
+from sqlalchemy import Column, String, Integer, BigInteger, Boolean, ForeignKey, Index
 from sqlalchemy.dialects.postgresql import ARRAY
 
 from dbsession import Base
@@ -17,6 +17,11 @@ class Transaction(Base):
     accepting_block_hash = Column(String, nullable=True)
 
 
+Index("block_time_idx", Transaction.block_time)
+Index("idx_accepting_block", Transaction.accepting_block_hash)
+Index("idx_block_hash", Transaction.block_hash)
+
+
 class TransactionOutput(Base):
     __tablename__ = 'transactions_outputs'
     id = Column(Integer, primary_key=True)
@@ -27,6 +32,13 @@ class TransactionOutput(Base):
     script_public_key_address = Column(String)
     script_public_key_type = Column(String)
     accepting_block_hash = Column(String)
+
+
+Index("block_timeoutputs_idx", TransactionOutput.block_time)
+Index("idx_addr_bt", TransactionOutput.script_public_key_address, TransactionOutput.block_time)
+Index("idx_txouts", TransactionOutput.transaction_id)
+Index("idx_txouts_addr", TransactionOutput.script_public_key_address)
+Index("tx_id_and_index", TransactionOutput.transaction_id, TransactionOutput.index)
 
 
 class TransactionInput(Base):
@@ -40,3 +52,7 @@ class TransactionInput(Base):
 
     signature_script = Column(String)  # "41c903159094....281a1d26f70b0037d600554e01",
     sig_op_count = Column(Integer)
+
+
+Index("idx_txin_prev", TransactionInput.previous_outpoint_hash)
+Index("idx_txin", TransactionInput.transaction_id)

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Float, Boolean, Integer, BigInteger, TIMESTAMP
+from sqlalchemy import Column, String, Float, Boolean, Integer, BigInteger, TIMESTAMP, Index
 from sqlalchemy.dialects.postgresql import ARRAY
 
 from dbsession import Base
@@ -27,3 +27,7 @@ class Block(Base):
     utxo_commitment = Column(String)
     version = Column(Integer)
 
+
+Index("block_chainblock", Block.is_chain_block)
+Index("idx_blue_score", Block.blue_score)
+Index("idx_daa_score", Block.daa_score)
