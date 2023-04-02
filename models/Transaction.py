@@ -27,6 +27,7 @@ class TransactionOutput(Base):
     script_public_key_address = Column(String)
     script_public_key_type = Column(String)
     accepting_block_hash = Column(String)
+    block_time = Column(BigInteger)  # "1663286480803"
 
 
 class TransactionInput(Base):
@@ -40,3 +41,4 @@ class TransactionInput(Base):
 
     signature_script = Column(String)  # "41c903159094....281a1d26f70b0037d600554e01",
     sig_op_count = Column(Integer)
+    block_time = Column(BigInteger)  # "1663286480803"
