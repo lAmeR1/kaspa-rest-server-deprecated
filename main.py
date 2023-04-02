@@ -4,6 +4,7 @@ import os
 
 from starlette.responses import RedirectResponse
 
+from dbsession import create_all
 from endpoints import get_balance, get_utxos, get_blocks, get_blockdag, get_circulating_supply, get_kaspad_info, \
     get_network, get_price
 from endpoints.get_address_transactions import get_transactions_for_address
@@ -48,6 +49,8 @@ async def docs_redirect():
 logging.basicConfig(format="%(asctime)s::%(levelname)s::%(name)s::%(message)s",
                     level=logging.DEBUG if os.getenv("DEBUG", False) else logging.INFO,
                     handlers=[logging.StreamHandler()])
+
+create_all(drop=False)
 
 if __name__ == '__main__':
     if os.getenv("DEBUG"):
