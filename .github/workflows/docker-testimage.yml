@@ -1,8 +1,7 @@
-name: Docker Image CI
+name: Docker Image TESTBUILD
 
 on:
-  release:
-    types: [ published ]
+  workflow_dispatch
 
 jobs:
   build:
@@ -20,7 +19,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: supertypo/kaspa-rest-server:${{github.ref_name}}, supertypo/kaspa-rest-server:latest
+          tags: supertypo/kaspa-rest-server:test
           file: ./docker/Dockerfile
           build-args: |
             version=${{github.ref_name}}
