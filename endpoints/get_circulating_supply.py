@@ -2,6 +2,7 @@
 
 from pydantic import BaseModel
 
+from endpoints import sql_db_only
 from server import app, kaspad_client
 from fastapi.responses import PlainTextResponse
 
@@ -39,7 +40,7 @@ async def get_circulating_coins(in_billion : bool = False):
 
 @app.get("/info/coinsupply/total", tags=["Kaspa network info"],
          response_class=PlainTextResponse)
-async def get_circulating_coins():
+async def get_total_coins():
     """
     Get total amount of $KAS token as numerical value
     """

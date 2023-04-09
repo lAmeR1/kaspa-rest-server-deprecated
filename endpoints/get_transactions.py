@@ -9,7 +9,7 @@ from sqlalchemy import Integer, cast
 from sqlalchemy.future import select
 
 from dbsession import async_session
-from endpoints import filter_fields
+from endpoints import filter_fields, sql_db_only
 from models.Block import Block
 from models.Transaction import Transaction, TransactionOutput, TransactionInput
 from server import app
@@ -80,6 +80,7 @@ class PreviousOutpointLookupMode(str, Enum):
          response_model=TxModel,
          tags=["Kaspa transactions"],
          response_model_exclude_unset=True)
+@sql_db_only
 async def get_transaction(transactionId: str = Path(regex="[a-f0-9]{64}"),
                           inputs: bool = True,
                           outputs: bool = True,
@@ -160,6 +161,7 @@ async def get_transaction(transactionId: str = Path(regex="[a-f0-9]{64}"),
           response_model=List[TxModel],
           tags=["Kaspa transactions"],
           response_model_exclude_unset=True)
+@sql_db_only
 async def search_for_transactions(txSearch: TxSearch,
                                   fields: str = "",
                                   resolve_previous_outpoints: PreviousOutpointLookupMode =
