@@ -34,8 +34,6 @@ class TransactionOutput(Base):
     block_time = Column(BigInteger)
 
 
-Index("block_timeoutputs_idx", TransactionOutput.block_time)
-Index("idx_addr_bt", TransactionOutput.script_public_key_address, TransactionOutput.block_time)
 Index("idx_txouts", TransactionOutput.transaction_id)
 Index("idx_txouts_addr", TransactionOutput.script_public_key_address)
 Index("tx_id_and_index", TransactionOutput.transaction_id, TransactionOutput.index)
