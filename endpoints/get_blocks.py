@@ -136,12 +136,12 @@ async def get_blocks_from_bluescore(response: Response,
             "blueScore": block.blue_score,
             "pruningPoint": block.pruning_point
         },
-        "transactions": (txs := (await get_transactions_from_block_hash(block.hash))) if includeTransactions else None,
+        "transactions": (txs := (await get_block_transactions(block.hash))) if includeTransactions else None,
         "verboseData": {
             "hash": block.hash,
             "difficulty": block.difficulty,
             "selectedParentHash": block.selected_parent_hash,
-            "transactionIds": [tx.transaction_id for tx in txs] if includeTransactions else None,
+            "transactionIds": [tx["verboseData"]["transactionId"] for tx in txs] if includeTransactions else None,
             "blueScore": block.blue_score,
             "childrenHashes": [],
             "mergeSetBluesHashes": block.merge_set_blues_hashes,
@@ -150,13 +150,6 @@ async def get_blocks_from_bluescore(response: Response,
         }
     } for block in blocks]
 
-
-async def get_transactions_from_block_hash(block_hash):
-    async with async_session() as s:
-        txs = (await s.execute(select(Transaction)
-                                  .where(Transaction.block_hash.contains([block_hash])))).scalars().all()
-
-        return txs
 
 async def get_blocks_from_db_by_bluescore(blue_score):
     async with async_session() as s:
