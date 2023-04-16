@@ -31,7 +31,6 @@ class TransactionOutput(Base):
     script_public_key_address = Column(String)
     script_public_key_type = Column(String)
     accepting_block_hash = Column(String)
-    block_time = Column(BigInteger)
 
 
 Index("idx_txouts", TransactionOutput.transaction_id)
