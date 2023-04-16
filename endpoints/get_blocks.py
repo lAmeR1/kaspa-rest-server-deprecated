@@ -79,17 +79,18 @@ async def get_block(response: Response,
         # Didn't find the block in kaspad. Try getting it from the DB
         response.headers["X-Data-Source"] = "Database"
         requested_block = await get_block_from_db(blockId)
-    
+
     if not requested_block:
         # Still did not get the block
         raise HTTPException(status_code=404, detail="Block not found")
-    
+
     # We found the block, now we guarantee it contains the transactions
     # It's possible that the block from kaspad does not contain transactions
     if 'transactions' not in requested_block or not requested_block['transactions']:
         requested_block['transactions'] = await get_block_transactions(blockId)
 
     return requested_block
+
 
 @app.get("/blocks", response_model=BlockResponse, tags=["Kaspa blocks"])
 async def get_blocks(lowHash: str = Query(regex="[a-f0-9]{64}"),
@@ -108,13 +109,14 @@ async def get_blocks(lowHash: str = Query(regex="[a-f0-9]{64}"),
 
     return resp["getBlocksResponse"]
 
-"""
-Get the block from the database
-"""
+
 async def get_block_from_db(blockId):
+    """
+    Get the block from the database
+    """
     async with async_session() as s:
         requested_block = await s.execute(select(Block)
-                                            .where(Block.hash == blockId).limit(1))
+                                          .where(Block.hash == blockId).limit(1))
 
         try:
             requested_block = requested_block.first()[0]  # type: Block
@@ -137,7 +139,7 @@ async def get_block_from_db(blockId):
                 "blueScore": requested_block.blue_score,
                 "pruningPoint": requested_block.pruning_point
             },
-            "transactions": None, # This will be filled later
+            "transactions": None,  # This will be filled later
             "verboseData": {
                 "hash": requested_block.hash,
                 "difficulty": requested_block.difficulty,
@@ -152,9 +154,12 @@ async def get_block_from_db(blockId):
         }
     return None
 
+
 """
 Get the transactions associated with a block
 """
+
+
 async def get_block_transactions(blockId):
     # create tx data
     tx_list = []
@@ -165,14 +170,14 @@ async def get_block_transactions(blockId):
         transactions = transactions.scalars().all()
 
         tx_outputs = await s.execute(select(TransactionOutput)
-                                        .where(TransactionOutput.transaction_id
+                                     .where(TransactionOutput.transaction_id
                                             .in_([tx.transaction_id for tx in transactions])))
 
         tx_outputs = tx_outputs.scalars().all()
 
         tx_inputs = await s.execute(select(TransactionInput)
                                     .where(TransactionInput.transaction_id
-                                            .in_([tx.transaction_id for tx in transactions])))
+                                           .in_([tx.transaction_id for tx in transactions])))
 
         tx_inputs = tx_inputs.scalars().all()
 
@@ -208,5 +213,5 @@ async def get_block_transactions(blockId):
                 "blockTime": tx.block_time
             }
         })
-    
+
     return tx_list
