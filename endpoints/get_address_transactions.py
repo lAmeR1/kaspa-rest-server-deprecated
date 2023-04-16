@@ -65,7 +65,7 @@ async def get_transactions_for_address(
             
             FROM transactions
 			LEFT JOIN transactions_outputs ON transactions.transaction_id = transactions_outputs.transaction_id
-			LEFT JOIN transactions_inputs ON transactions_inputs.previous_outpoint_hash = transactions.transaction_id AND transactions_inputs.previous_outpoint_index::int = transactions_outputs.index
+			LEFT JOIN transactions_inputs ON transactions_inputs.previous_outpoint_hash = transactions.transaction_id AND transactions_inputs.previous_outpoint_index = transactions_outputs.index
             WHERE "script_public_key_address" = :kaspaAddress
 			ORDER by transactions.block_time DESC
 			LIMIT 500"""),

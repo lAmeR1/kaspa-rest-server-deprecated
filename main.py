@@ -4,6 +4,7 @@ import os
 
 from starlette.responses import RedirectResponse
 
+from dbsession import create_all
 from endpoints import get_balance, get_utxos, get_blocks, get_blockdag, get_circulating_supply, get_kaspad_info, \
     get_network, get_price
 from endpoints.get_address_transactions import get_transactions_for_address
@@ -33,6 +34,8 @@ if os.getenv('VSPC_REQUEST') == 'true':
 
 @app.on_event("startup")
 async def startup():
+    # create db if needed
+    await create_all(drop=False)
     # get kaspad
     await get_kas_market_data()
 
