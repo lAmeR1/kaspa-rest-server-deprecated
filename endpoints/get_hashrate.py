@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from sqlalchemy import select
 
 from dbsession import async_session
+from endpoints import sql_db_only
 from helper import KeyValueStore
 from models.Block import Block
 from server import app, kaspad_client
@@ -49,6 +50,7 @@ async def get_hashrate(stringOnly: bool = False):
 
 
 @app.get("/info/hashrate/max", response_model=MaxHashrateResponse, tags=["Kaspa network info"])
+@sql_db_only
 async def get_max_hashrate():
     """
     Returns the current hashrate for Kaspa network in TH/s.
