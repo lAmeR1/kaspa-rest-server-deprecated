@@ -1,5 +1,4 @@
 # encoding: utf-8
-import os
 from typing import List
 
 from fastapi import Query, Path, HTTPException
@@ -19,7 +18,7 @@ class VerboseDataModel(BaseModel):
     hash: str = "18c7afdf8f447ca06adb8b4946dc45f5feb1188c7d177da6094dfbc760eca699"
     difficulty: float = 4102204523252.94,
     selectedParentHash: str = "580f65c8da9d436480817f6bd7c13eecd9223b37f0d34ae42fb17e1e9fda397e"
-    transactionIds: List[str] = ["533f8314bf772259fe517f53507a79ebe61c8c6a11748d93a0835551233b3311"]
+    transactionIds: List[str] | None = ["533f8314bf772259fe517f53507a79ebe61c8c6a11748d93a0835551233b3311"]
     blueScore: str = "18483232"
     childrenHashes: List[str] = ["2fda0dad4ec879b4ad02ebb68c757955cab305558998129a7de111ab852e7dcb",
                                  "9a822351cd293a653f6721afec1646bd1690da7124b5fbe87001711406010604"
@@ -114,12 +113,59 @@ async def get_blocks(lowHash: str = Query(regex="[a-f0-9]{64}"),
     return resp["getBlocksResponse"]
 
 
-"""
-Get the block from the database
-"""
+@app.get("/blocks-from-bluescore", response_model=List[BlockModel], tags=["Kaspa blocks"])
+async def get_blocks_from_bluescore(response: Response,
+                                    blueScore: int = 43679173,
+                                    includeTransactions: bool = False):
+    """
+    Lists block beginning from a low hash (block id). Note that this function is running on a kaspad and not returning
+    data from database.
+    """
+    response.headers["X-Data-Source"] = "Database"
+    blocks = await get_blocks_from_db_by_bluescore(blueScore)
+
+    return [{
+        "header": {
+            "version": block.version,
+            "hashMerkleRoot": block.hash_merkle_root,
+            "acceptedIdMerkleRoot": block.accepted_id_merkle_root,
+            "utxoCommitment": block.utxo_commitment,
+            "timestamp": round(block.timestamp.timestamp() * 1000),
+            "bits": block.bits,
+            "nonce": block.nonce,
+            "daaScore": block.daa_score,
+            "blueWork": block.blue_work,
+            "parents": [{"parentHashes": block.parents}],
+            "blueScore": block.blue_score,
+            "pruningPoint": block.pruning_point
+        },
+        "transactions": (txs := (await get_block_transactions(block.hash))) if includeTransactions else None,
+        "verboseData": {
+            "hash": block.hash,
+            "difficulty": block.difficulty,
+            "selectedParentHash": block.selected_parent_hash,
+            "transactionIds": [tx["verboseData"]["transactionId"] for tx in txs] if includeTransactions else None,
+            "blueScore": block.blue_score,
+            "childrenHashes": [],
+            "mergeSetBluesHashes": block.merge_set_blues_hashes,
+            "mergeSetRedsHashes": block.merge_set_reds_hashes,
+            "isChainBlock": block.is_chain_block,
+        }
+    } for block in blocks]
+
+
+async def get_blocks_from_db_by_bluescore(blue_score):
+    async with async_session() as s:
+        blocks = (await s.execute(select(Block)
+                                  .where(Block.blue_score == blue_score))).scalars().all()
+
+    return blocks
 
 
 async def get_block_from_db(blockId):
+    """
+    Get the block from the database
+    """
     async with async_session() as s:
         requested_block = await s.execute(select(Block)
                                           .where(Block.hash == blockId).limit(1))
