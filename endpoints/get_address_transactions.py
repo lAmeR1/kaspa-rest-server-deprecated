@@ -6,12 +6,12 @@ from fastapi import Path, Query
 from pydantic import BaseModel
 from sqlalchemy import text, func
 from sqlalchemy.future import select
-from endpoints.get_transactions import search_for_transactions, TxSearch, TxModel
 
 from dbsession import async_session
-from server import app
-
+from endpoints import sql_db_only
+from endpoints.get_transactions import search_for_transactions, TxSearch, TxModel
 from models.TxAddrMapping import TxAddrMapping
+from server import app
 
 DESC_RESOLVE_PARAM = "Use this parameter if you want to fetch the TransactionInput previous outpoint details." \
                      " Light fetches only the address and amount. Full fetches the whole TransactionOutput and " \
@@ -43,6 +43,7 @@ class PreviousOutpointLookupMode(str, Enum):
          response_model_exclude_unset=True,
          tags=["Kaspa addresses"],
          deprecated=True)
+@sql_db_only
 async def get_transactions_for_address(
         kaspaAddress: str = Path(
             description="Kaspa address as string e.g. "
@@ -87,6 +88,7 @@ async def get_transactions_for_address(
          response_model=List[TxModel],
          response_model_exclude_unset=True,
          tags=["Kaspa addresses"])
+@sql_db_only
 async def get_full_transactions_for_address(
         kaspaAddress: str = Path(
             description="Kaspa address as string e.g. "
@@ -130,6 +132,7 @@ async def get_full_transactions_for_address(
 @app.get("/addresses/{kaspaAddress}/transactions-count",
          response_model=TransactionCount,
          tags=["Kaspa addresses"])
+@sql_db_only
 async def get_transaction_count_for_address(
         kaspaAddress: str = Path(
             description="Kaspa address as string e.g. "

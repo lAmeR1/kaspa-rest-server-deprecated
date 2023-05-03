@@ -11,6 +11,8 @@ from models.Block import Block
 from models.Transaction import Transaction, TransactionOutput, TransactionInput
 from server import app, kaspad_client
 
+IS_SQL_DB_CONFIGURED = os.getenv("SQL_URI") is not None
+
 
 class VerboseDataModel(BaseModel):
     hash: str = "18c7afdf8f447ca06adb8b4946dc45f5feb1188c7d177da6094dfbc760eca699"
@@ -76,9 +78,10 @@ async def get_block(response: Response,
         # We found the block in kaspad. Just use it
         requested_block = resp["getBlockResponse"]["block"]
     else:
-        # Didn't find the block in kaspad. Try getting it from the DB
-        response.headers["X-Data-Source"] = "Database"
-        requested_block = await get_block_from_db(blockId)
+        if IS_SQL_DB_CONFIGURED:
+            # Didn't find the block in kaspad. Try getting it from the DB
+            response.headers["X-Data-Source"] = "Database"
+            requested_block = await get_block_from_db(blockId)
 
     if not requested_block:
         # Still did not get the block

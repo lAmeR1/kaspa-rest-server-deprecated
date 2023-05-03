@@ -1,6 +1,5 @@
 # encoding: utf-8
 
-import requests
 from pydantic import BaseModel
 
 from helper import get_kas_price
@@ -26,7 +25,6 @@ async def get_marketcap(stringOnly: bool = False):
         }
     else:
         if mcap < 1000000000:
-            return f"{round(mcap / 1000000,1)}M"
+            return f"{round(mcap / 1000000, 1)}M"
         else:
-            return f"{round(mcap / 1000000000,1)}B"
-
+            return f"{round(mcap / 1000000000, 1)}B"
