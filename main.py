@@ -19,6 +19,8 @@ from endpoints.kaspad_requests.submit_transaction_request import submit_a_new_tr
 from helper import get_kas_market_data
 from server import app, kaspad_client
 
+IS_SQL_DB_CONFIGURED = os.getenv("SQL_URI") is not None
+
 print(
     f"Loaded: {get_balance}, {get_utxos}, {get_blocks}, {get_blockdag}, {get_circulating_supply}, "
     f"{get_kaspad_info}, {get_network}, {get_marketcap}, {get_hashrate}, {get_blockreward}"
@@ -35,7 +37,8 @@ if os.getenv('VSPC_REQUEST') == 'true':
 @app.on_event("startup")
 async def startup():
     # create db if needed
-    await create_all(drop=False)
+    if IS_SQL_DB_CONFIGURED:
+        await create_all(drop=False)
     # get kaspad
     await get_kas_market_data()
 
