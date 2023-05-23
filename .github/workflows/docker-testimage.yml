@@ -19,7 +19,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: supertypo/kaspa-rest-server:lite
+          tags: supertypo/kaspa-rest-server:test
           file: ./docker/Dockerfile
           build-args: |
             version=${{github.ref_name}}
