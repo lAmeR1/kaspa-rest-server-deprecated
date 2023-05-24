@@ -1,11 +1,14 @@
 # encoding: utf-8
-
+import os
 from typing import List
 
 from fastapi import Path, HTTPException
 from pydantic import BaseModel
 
 from server import app, kaspad_client
+
+IS_TESTNET = os.getenv('TESTNET', 'false').lower() == 'true'
+REGEX_KASPA_ADDRESS = "^kaspa\:[a-z0-9]{61,63}$" if not IS_TESTNET else "^kaspatest\:[a-z0-9]{61,63}$"
 
 
 class OutpointModel(BaseModel):
@@ -32,7 +35,7 @@ class UtxoResponse(BaseModel):
 @app.get("/addresses/{kaspaAddress}/utxos", response_model=List[UtxoResponse], tags=["Kaspa addresses"])
 async def get_utxos_for_address(kaspaAddress: str = Path(
     description="Kaspa address as string e.g. kaspa:qqkqkzjvr7zwxxmjxjkmxxdwju9kjs6e9u82uh59z07vgaks6gg62v8707g73",
-    regex="^kaspa\:[a-z0-9]{61,63}$")):
+    regex=REGEX_KASPA_ADDRESS)):
     """
     Lists all open utxo for a given kaspa address
     """
