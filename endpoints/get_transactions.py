@@ -170,6 +170,9 @@ async def search_for_transactions(txSearch: TxSearch,
     """
     Get block information for a given block id
     """
+    if len(txSearch.transactionIds) > 1000:
+        raise HTTPException(422, "Too many transaction ids")
+
     fields = fields.split(",") if fields else []
 
     async with async_session() as s:
