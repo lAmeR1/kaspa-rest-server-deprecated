@@ -5,7 +5,7 @@ from typing import List
 
 from fastapi import Path, HTTPException, Query
 from pydantic import BaseModel, parse_obj_as
-from sqlalchemy import Integer, cast
+from sqlalchemy import Integer
 from sqlalchemy.future import select
 
 from dbsession import async_session
@@ -111,7 +111,7 @@ async def get_transaction(transactionId: str = Path(regex="[a-f0-9]{64}"),
                 tx_inputs = await s.execute(select(TransactionInput, TransactionOutput)
                                             .outerjoin(TransactionOutput,
                                                        (TransactionOutput.transaction_id == TransactionInput.previous_outpoint_hash) &
-                                                       (TransactionOutput.index == cast(TransactionInput.previous_outpoint_index, Integer)))
+                                                       (TransactionOutput.index == TransactionInput.previous_outpoint_index, Integer))
                                             .filter(TransactionInput.transaction_id == transactionId))
 
                 tx_inputs = tx_inputs.all()
@@ -186,7 +186,7 @@ async def search_for_transactions(txSearch: TxSearch,
                 tx_inputs = await s.execute(select(TransactionInput, TransactionOutput)
                                             .outerjoin(TransactionOutput,
                                                        (TransactionOutput.transaction_id == TransactionInput.previous_outpoint_hash) &
-                                                       (TransactionOutput.index == cast(TransactionInput.previous_outpoint_index, Integer)))
+                                                       (TransactionOutput.index == TransactionInput.previous_outpoint_index))
                                             .filter(TransactionInput.transaction_id.in_(txSearch.transactionIds)))
 
             # without joining previous_tx_outputs
