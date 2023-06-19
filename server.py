@@ -11,6 +11,7 @@ from pydantic import BaseModel
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
+from helper.LimitUploadSize import LimitUploadSize
 from kaspad.KaspadMultiClient import KaspadMultiClient
 
 fastapi.logger.logger.setLevel(logging.WARNING)
@@ -28,6 +29,7 @@ app = FastAPI(
 )
 
 app.add_middleware(GZipMiddleware, minimum_size=500)
+app.add_middleware(LimitUploadSize, max_upload_size=200_000)  # ~1MB
 
 origins = ["*"]
 
