@@ -111,7 +111,7 @@ async def get_transaction(transactionId: str = Path(regex="[a-f0-9]{64}"),
                 tx_inputs = await s.execute(select(TransactionInput, TransactionOutput)
                                             .outerjoin(TransactionOutput,
                                                        (TransactionOutput.transaction_id == TransactionInput.previous_outpoint_hash) &
-                                                       (TransactionOutput.index == TransactionInput.previous_outpoint_index, Integer))
+                                                       (TransactionOutput.index == TransactionInput.previous_outpoint_index))
                                             .filter(TransactionInput.transaction_id == transactionId))
 
                 tx_inputs = tx_inputs.all()
