@@ -173,8 +173,8 @@ async def search_for_transactions(txSearch: TxSearch,
     if len(txSearch.transactionIds) > 1000:
         raise HTTPException(422, "Too many transaction ids")
 
-    if resolve_previous_outpoints in ["light", "full"] and len(txSearch.transactionIds) > 10:
-        raise HTTPException(422, "Temporary issue: Transaction ids count is limited to 10 for light and full searches.")
+    if resolve_previous_outpoints in ["light", "full"] and len(txSearch.transactionIds) > 50:
+        raise HTTPException(422, "Temporary issue: Transaction ids count is limited to 50 for light and full searches.")
 
     fields = fields.split(",") if fields else []
 
