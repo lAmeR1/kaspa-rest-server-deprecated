@@ -5,7 +5,7 @@ from typing import List
 
 from fastapi import Path, HTTPException, Query
 from pydantic import BaseModel, parse_obj_as
-from sqlalchemy import Integer, cast
+from sqlalchemy import Integer
 from sqlalchemy.future import select
 
 from dbsession import async_session
@@ -111,7 +111,7 @@ async def get_transaction(transactionId: str = Path(regex="[a-f0-9]{64}"),
                 tx_inputs = await s.execute(select(TransactionInput, TransactionOutput)
                                             .outerjoin(TransactionOutput,
                                                        (TransactionOutput.transaction_id == TransactionInput.previous_outpoint_hash) &
-                                                       (TransactionOutput.index == cast(TransactionInput.previous_outpoint_index, Integer)))
+                                                       (TransactionOutput.index == TransactionInput.previous_outpoint_index))
                                             .filter(TransactionInput.transaction_id == transactionId))
 
                 tx_inputs = tx_inputs.all()
@@ -170,6 +170,12 @@ async def search_for_transactions(txSearch: TxSearch,
     """
     Get block information for a given block id
     """
+    if len(txSearch.transactionIds) > 1000:
+        raise HTTPException(422, "Too many transaction ids")
+
+    if resolve_previous_outpoints in ["light", "full"] and len(txSearch.transactionIds) > 50:
+        raise HTTPException(422, "Temporary issue: Transaction ids count is limited to 50 for light and full searches.")
+
     fields = fields.split(",") if fields else []
 
     async with async_session() as s:
@@ -186,7 +192,7 @@ async def search_for_transactions(txSearch: TxSearch,
                 tx_inputs = await s.execute(select(TransactionInput, TransactionOutput)
                                             .outerjoin(TransactionOutput,
                                                        (TransactionOutput.transaction_id == TransactionInput.previous_outpoint_hash) &
-                                                       (TransactionOutput.index == cast(TransactionInput.previous_outpoint_index, Integer)))
+                                                       (TransactionOutput.index == TransactionInput.previous_outpoint_index))
                                             .filter(TransactionInput.transaction_id.in_(txSearch.transactionIds)))
 
             # without joining previous_tx_outputs
