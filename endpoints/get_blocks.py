@@ -21,12 +21,10 @@ class VerboseDataModel(BaseModel):
     selectedParentHash: str = "580f65c8da9d436480817f6bd7c13eecd9223b37f0d34ae42fb17e1e9fda397e"
     transactionIds: List[str] | None = ["533f8314bf772259fe517f53507a79ebe61c8c6a11748d93a0835551233b3311"]
     blueScore: str = "18483232"
-    childrenHashes: List[str] = ["2fda0dad4ec879b4ad02ebb68c757955cab305558998129a7de111ab852e7dcb",
-                                 "9a822351cd293a653f6721afec1646bd1690da7124b5fbe87001711406010604"
-                                 ]
+    childrenHashes: List[str] | None = None
     mergeSetBluesHashes: List[str] = ["580f65c8da9d436480817f6bd7c13eecd9223b37f0d34ae42fb17e1e9fda397e"]
     mergeSetRedsHashes: List[str] = ["580f65c8da9d436480817f6bd7c13eecd9223b37f0d34ae42fb17e1e9fda397e"]
-    isChainBlock: bool = False
+    isChainBlock: bool | None = None
 
 
 class ParentHashModel(BaseModel):
@@ -101,8 +99,11 @@ async def get_blocks(lowHash: str = Query(regex="[a-f0-9]{64}"),
                      includeBlocks: bool = False,
                      includeTransactions: bool = False):
     """
-    Lists block beginning from a low hash (block id). Note that this function is running on a kaspad and not returning
-    data from database.
+    Lists block beginning from a low hash (block id). Note that this function tries to determine the blocks from
+    the kaspad node. If this is not possible, the database is getting queryied as backup. In this case the response
+    header contains the key value pair: x-data-source: database.
+
+    Additionally the fields in verboseData: isChainBlock, childrenHashes and transactionIds can't be filled.
     """
     resp = await kaspad_client.request("getBlocksRequest",
                                        params={
@@ -147,10 +148,10 @@ async def get_blocks_from_bluescore(response: Response,
             "selectedParentHash": block.selected_parent_hash,
             "transactionIds": [tx["verboseData"]["transactionId"] for tx in txs] if includeTransactions else None,
             "blueScore": block.blue_score,
-            "childrenHashes": [],
+            "childrenHashes": None,
             "mergeSetBluesHashes": block.merge_set_blues_hashes,
             "mergeSetRedsHashes": block.merge_set_reds_hashes,
-            "isChainBlock": block.is_chain_block,
+            "isChainBlock": None,
         }
     } for block in blocks]
 
@@ -197,12 +198,12 @@ async def get_block_from_db(blockId):
                 "hash": requested_block.hash,
                 "difficulty": requested_block.difficulty,
                 "selectedParentHash": requested_block.selected_parent_hash,
-                "transactionIds": [],
+                "transactionIds": None,  # information not in database
                 "blueScore": requested_block.blue_score,
-                "childrenHashes": [],
+                "childrenHashes": None,  # information not in database
                 "mergeSetBluesHashes": requested_block.merge_set_blues_hashes,
                 "mergeSetRedsHashes": requested_block.merge_set_reds_hashes,
-                "isChainBlock": requested_block.is_chain_block
+                "isChainBlock": None,  # information not in database
             }
         }
     return None
