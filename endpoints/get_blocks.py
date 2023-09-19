@@ -87,7 +87,10 @@ async def get_block(response: Response,
 
     if not requested_block:
         # Still did not get the block
-        raise HTTPException(status_code=404, detail="Block not found")
+        print("hier")
+        raise HTTPException(status_code=404, detail="Block not found", headers={
+            "Cache-Control": "public, max-age=3"
+        })
 
     # We found the block, now we guarantee it contains the transactions
     # It's possible that the block from kaspad does not contain transactions
@@ -191,7 +194,9 @@ async def get_block_from_db(blockId):
         try:
             requested_block = requested_block.first()[0]  # type: Block
         except TypeError:
-            raise HTTPException(status_code=404, detail="Block not found")
+            raise HTTPException(status_code=404, detail="Block not found", headers={
+                "Cache-Control": "public, max-age=3"
+            })
 
     if requested_block:
         return {

@@ -3,7 +3,7 @@
 from enum import Enum
 from typing import List
 
-from fastapi import Path, HTTPException, Query
+from fastapi import Path, HTTPException, Query, Response
 from pydantic import BaseModel, parse_obj_as
 from sqlalchemy import Integer
 from sqlalchemy.future import select
@@ -81,7 +81,8 @@ class PreviousOutpointLookupMode(str, Enum):
          tags=["Kaspa transactions"],
          response_model_exclude_unset=True)
 @sql_db_only
-async def get_transaction(transactionId: str = Path(regex="[a-f0-9]{64}"),
+async def get_transaction(response: Response,
+                          transactionId: str = Path(regex="[a-f0-9]{64}"),
                           inputs: bool = True,
                           outputs: bool = True,
                           resolve_previous_outpoints: PreviousOutpointLookupMode =
@@ -154,7 +155,9 @@ async def get_transaction(transactionId: str = Path(regex="[a-f0-9]{64}"),
             "inputs": parse_obj_as(List[TxInput], tx_inputs) if tx_inputs else None
         }
     else:
-        raise HTTPException(status_code=404, detail="Transaction not found")
+        raise HTTPException(status_code=404, detail="Transaction not found", headers={
+            "Cache-Control": "public, max-age=3"
+        })
 
 
 @app.post("/transactions/search",
