@@ -87,7 +87,7 @@ async def get_block(response: Response,
         # Still did not get the block
         print("hier")
         raise HTTPException(status_code=404, detail="Block not found", headers={
-            "Cache-Control": "public, max-age=3"
+            "Cache-Control": "public, max-age=1"
         })
 
     # We found the block, now we guarantee it contains the transactions
@@ -96,10 +96,10 @@ async def get_block(response: Response,
         requested_block['transactions'] = await get_block_transactions(blockId)
 
     if int(requested_block["header"]["blueScore"]) > current_blue_score_data["blue_score"] - 20:
-        response.headers["Cache-Control"] = "public, max-age=3"
+        response.headers["Cache-Control"] = "public, max-age=1"
 
     elif int(requested_block["header"]["blueScore"]) > current_blue_score_data["blue_score"] - 60:
-        response.headers["Cache-Control"] = "public, max-age=60"
+        response.headers["Cache-Control"] = "public, max-age=10"
 
     else:
         response.headers["Cache-Control"] = "public, max-age=600"
