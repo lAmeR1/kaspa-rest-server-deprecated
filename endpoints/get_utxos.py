@@ -1,5 +1,4 @@
 # encoding: utf-8
-
 from typing import List
 
 from fastapi import Path, HTTPException
@@ -7,6 +6,7 @@ from pydantic import BaseModel
 
 from server import app, kaspad_client
 
+REGEX_KASPA_ADDRESS = "^kaspa(test)?\:[a-z0-9]{61,63}$"
 
 class OutpointModel(BaseModel):
     transactionId: str = "ef62efbc2825d3ef9ec1cf9b80506876ac077b64b11a39c8ef5e028415444dc9"
@@ -32,7 +32,7 @@ class UtxoResponse(BaseModel):
 @app.get("/addresses/{kaspaAddress}/utxos", response_model=List[UtxoResponse], tags=["Kaspa addresses"])
 async def get_utxos_for_address(kaspaAddress: str = Path(
     description="Kaspa address as string e.g. kaspa:qqkqkzjvr7zwxxmjxjkmxxdwju9kjs6e9u82uh59z07vgaks6gg62v8707g73",
-    regex="^kaspa\:[a-z0-9]{61,63}$")):
+    regex=REGEX_KASPA_ADDRESS)):
     """
     Lists all open utxo for a given kaspa address
     """

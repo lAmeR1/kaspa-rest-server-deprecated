@@ -5,6 +5,7 @@ from pydantic import BaseModel
 
 from server import app, kaspad_client
 
+REGEX_KASPA_ADDRESS = "^kaspa(test)?\:[a-z0-9]{61,63}$"
 
 class BalanceResponse(BaseModel):
     address: str = "kaspa:pzhh76qc82wzduvsrd9xh4zde9qhp0xc8rl7qu2mvl2e42uvdqt75zrcgpm00"
@@ -15,7 +16,7 @@ class BalanceResponse(BaseModel):
 async def get_balance_from_kaspa_address(
         kaspaAddress: str = Path(
             description="Kaspa address as string e.g. kaspa:pzhh76qc82wzduvsrd9xh4zde9qhp0xc8rl7qu2mvl2e42uvdqt75zrcgpm00",
-            regex="^kaspa\:[a-z0-9]{61,63}$")):
+            regex=REGEX_KASPA_ADDRESS)):
     """
     Get balance for a given kaspa address
     """
