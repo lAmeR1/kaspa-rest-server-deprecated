@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from sqlalchemy import select
 
 from dbsession import async_session
+from endpoints.get_virtual_chain_blue_score import current_blue_score_data
 from models.Block import Block
 from models.Transaction import Transaction, TransactionOutput, TransactionInput
 from server import app, kaspad_client
@@ -21,12 +22,10 @@ class VerboseDataModel(BaseModel):
     selectedParentHash: str = "580f65c8da9d436480817f6bd7c13eecd9223b37f0d34ae42fb17e1e9fda397e"
     transactionIds: List[str] | None = ["533f8314bf772259fe517f53507a79ebe61c8c6a11748d93a0835551233b3311"]
     blueScore: str = "18483232"
-    childrenHashes: List[str] = ["2fda0dad4ec879b4ad02ebb68c757955cab305558998129a7de111ab852e7dcb",
-                                 "9a822351cd293a653f6721afec1646bd1690da7124b5fbe87001711406010604"
-                                 ]
+    childrenHashes: List[str] | None = None
     mergeSetBluesHashes: List[str] = ["580f65c8da9d436480817f6bd7c13eecd9223b37f0d34ae42fb17e1e9fda397e"]
     mergeSetRedsHashes: List[str] = ["580f65c8da9d436480817f6bd7c13eecd9223b37f0d34ae42fb17e1e9fda397e"]
-    isChainBlock: bool = False
+    isChainBlock: bool | None = None
 
 
 class ParentHashModel(BaseModel):
@@ -86,24 +85,42 @@ async def get_block(response: Response,
 
     if not requested_block:
         # Still did not get the block
-        raise HTTPException(status_code=404, detail="Block not found")
+        print("hier")
+        raise HTTPException(status_code=404, detail="Block not found", headers={
+            "Cache-Control": "public, max-age=1"
+        })
 
     # We found the block, now we guarantee it contains the transactions
     # It's possible that the block from kaspad does not contain transactions
     if 'transactions' not in requested_block or not requested_block['transactions']:
         requested_block['transactions'] = await get_block_transactions(blockId)
 
+    if int(requested_block["header"]["blueScore"]) > current_blue_score_data["blue_score"] - 20:
+        response.headers["Cache-Control"] = "public, max-age=1"
+
+    elif int(requested_block["header"]["blueScore"]) > current_blue_score_data["blue_score"] - 60:
+        response.headers["Cache-Control"] = "public, max-age=10"
+
+    else:
+        response.headers["Cache-Control"] = "public, max-age=600"
+
     return requested_block
 
 
 @app.get("/blocks", response_model=BlockResponse, tags=["Kaspa blocks"])
-async def get_blocks(lowHash: str = Query(regex="[a-f0-9]{64}"),
+async def get_blocks(response: Response,
+                     lowHash: str = Query(regex="[a-f0-9]{64}"),
                      includeBlocks: bool = False,
                      includeTransactions: bool = False):
     """
-    Lists block beginning from a low hash (block id). Note that this function is running on a kaspad and not returning
-    data from database.
+    Lists block beginning from a low hash (block id). Note that this function tries to determine the blocks from
+    the kaspad node. If this is not possible, the database is getting queryied as backup. In this case the response
+    header contains the key value pair: x-data-source: database.
+
+    Additionally the fields in verboseData: isChainBlock, childrenHashes and transactionIds can't be filled.
     """
+    response.headers["Cache-Control"] = "public, max-age=3"
+
     resp = await kaspad_client.request("getBlocksRequest",
                                        params={
                                            "lowHash": lowHash,
@@ -123,6 +140,10 @@ async def get_blocks_from_bluescore(response: Response,
     data from database.
     """
     response.headers["X-Data-Source"] = "Database"
+
+    if blueScore > current_blue_score_data["blue_score"] - 20:
+        response.headers["Cache-Control"] = "no-store"
+
     blocks = await get_blocks_from_db_by_bluescore(blueScore)
 
     return [{
@@ -147,10 +168,10 @@ async def get_blocks_from_bluescore(response: Response,
             "selectedParentHash": block.selected_parent_hash,
             "transactionIds": [tx["verboseData"]["transactionId"] for tx in txs] if includeTransactions else None,
             "blueScore": block.blue_score,
-            "childrenHashes": [],
+            "childrenHashes": None,
             "mergeSetBluesHashes": block.merge_set_blues_hashes,
             "mergeSetRedsHashes": block.merge_set_reds_hashes,
-            "isChainBlock": block.is_chain_block,
+            "isChainBlock": None,
         }
     } for block in blocks]
 
@@ -174,7 +195,9 @@ async def get_block_from_db(blockId):
         try:
             requested_block = requested_block.first()[0]  # type: Block
         except TypeError:
-            raise HTTPException(status_code=404, detail="Block not found")
+            raise HTTPException(status_code=404, detail="Block not found", headers={
+                "Cache-Control": "public, max-age=3"
+            })
 
     if requested_block:
         return {
@@ -197,12 +220,12 @@ async def get_block_from_db(blockId):
                 "hash": requested_block.hash,
                 "difficulty": requested_block.difficulty,
                 "selectedParentHash": requested_block.selected_parent_hash,
-                "transactionIds": [],
+                "transactionIds": None,  # information not in database
                 "blueScore": requested_block.blue_score,
-                "childrenHashes": [],
+                "childrenHashes": None,  # information not in database
                 "mergeSetBluesHashes": requested_block.merge_set_blues_hashes,
                 "mergeSetRedsHashes": requested_block.merge_set_reds_hashes,
-                "isChainBlock": requested_block.is_chain_block
+                "isChainBlock": None,  # information not in database
             }
         }
     return None

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, BigInteger, Boolean, ForeignKey, Index
+from sqlalchemy import Column, String, Integer, BigInteger, Boolean, Index
 from sqlalchemy.dialects.postgresql import ARRAY
 
 from dbsession import Base
@@ -24,7 +24,7 @@ Index("idx_block_hash", Transaction.block_hash)
 class TransactionOutput(Base):
     __tablename__ = 'transactions_outputs'
     id = Column(Integer, primary_key=True)
-    transaction_id = Column(String, ForeignKey('transactions.transaction_id'))
+    transaction_id = Column(String)
     index = Column(Integer)
     amount = Column(BigInteger)
     script_public_key = Column(String)
@@ -45,7 +45,7 @@ class TransactionInput(Base):
     index = Column(Integer)
 
     previous_outpoint_hash = Column(String)  # "ebf6da83db96d312a107a2ced19a01823894c9d7072ed0d696a9a152fd81485e"
-    previous_outpoint_index = Column(String)  # "ebf6da83db96d312a107a2ced19a01823894c9d7072ed0d696a9a152fd81485e"
+    previous_outpoint_index = Column(Integer)  # "ebf6da83db96d312a107a2ced19a01823894c9d7072ed0d696a9a152fd81485e"
 
     signature_script = Column(String)  # "41c903159094....281a1d26f70b0037d600554e01",
     sig_op_count = Column(Integer)
