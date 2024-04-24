@@ -5,13 +5,15 @@ from typing import List
 
 from fastapi import Path, HTTPException, Query, Response
 from pydantic import BaseModel, parse_obj_as
-from sqlalchemy import Integer
+from sqlalchemy import subquery
 from sqlalchemy.future import select
 
 from dbsession import async_session
 from endpoints import filter_fields, sql_db_only
 from models.Block import Block
+from models.BlockTransaction import BlockTransaction
 from models.Transaction import Transaction, TransactionOutput, TransactionInput
+from models.TransactionAcceptance import TransactionAcceptance
 from server import app
 
 DESC_RESOLVE_PARAM = "Use this parameter if you want to fetch the TransactionInput previous outpoint details." \
@@ -20,7 +22,6 @@ DESC_RESOLVE_PARAM = "Use this parameter if you want to fetch the TransactionInp
 
 
 class TxOutput(BaseModel):
-    id: int
     transaction_id: str
     index: int
     amount: int
@@ -34,7 +35,6 @@ class TxOutput(BaseModel):
 
 
 class TxInput(BaseModel):
-    id: int
     transaction_id: str
     index: int
     previous_outpoint_hash: str
@@ -92,14 +92,19 @@ async def get_transaction(response: Response,
     Get block information for a given block id
     """
     async with async_session() as s:
-        tx = await s.execute(select(Transaction, Block.blue_score) \
-                             .join(Block, Transaction.accepting_block_hash == Block.hash, isouter=True)
+        tx = await s.execute(select(Transaction, TransactionAcceptance.block_hash.label("accepting_block_hash"), Block.blue_score)
+                             .join(TransactionAcceptance, Transaction.transaction_id == TransactionAcceptance.transaction_id, isouter=True)
+                             .join(Block, TransactionAcceptance.block_hash == Block.hash, isouter=True)
                              .filter(Transaction.transaction_id == transactionId))
 
         tx = tx.first()
 
         tx_outputs = None
         tx_inputs = None
+
+        tx_blocks = await s.execute(select(BlockTransaction)
+                                    .filter(BlockTransaction.transaction_id == transactionId))
+        tx_blocks = tx_blocks.scalars().all()
 
         if outputs:
             tx_outputs = await s.execute(select(TransactionOutput) \
@@ -146,10 +151,10 @@ async def get_transaction(response: Response,
             "transaction_id": tx.Transaction.transaction_id,
             "hash": tx.Transaction.hash,
             "mass": tx.Transaction.mass,
-            "block_hash": tx.Transaction.block_hash,
+            "block_hash": [x.block_hash for x in tx_blocks],
             "block_time": tx.Transaction.block_time,
-            "is_accepted": tx.Transaction.is_accepted,
-            "accepting_block_hash": tx.Transaction.accepting_block_hash,
+            "is_accepted": True if tx.accepting_block_hash else False,
+            "accepting_block_hash": tx.accepting_block_hash,
             "accepting_block_blue_score": tx.blue_score,
             "outputs": parse_obj_as(List[TxOutput], tx_outputs) if tx_outputs else None,
             "inputs": parse_obj_as(List[TxInput], tx_inputs) if tx_inputs else None
@@ -182,12 +187,17 @@ async def search_for_transactions(txSearch: TxSearch,
     fields = fields.split(",") if fields else []
 
     async with async_session() as s:
-        tx_list = await s.execute(select(Transaction, Block.blue_score)
-                                  .join(Block, Transaction.accepting_block_hash == Block.hash, isouter=True)
+        tx_list = await s.execute(select(Transaction, TransactionAcceptance.block_hash.label("accepting_block_hash"), Block.blue_score)
+                                  .join(TransactionAcceptance, Transaction.transaction_id == TransactionAcceptance.transaction_id, isouter=True)
+                                  .join(Block, TransactionAcceptance.block_hash == Block.hash, isouter=True)
                                   .filter(Transaction.transaction_id.in_(txSearch.transactionIds))
                                   .order_by(Transaction.block_time.desc()))
 
         tx_list = tx_list.all()
+
+        tx_blocks = await s.execute(select(BlockTransaction)
+                                    .filter(BlockTransaction.transaction_id.in_(txSearch.transactionIds)))
+        tx_blocks = tx_blocks.scalars().all()
 
         if not fields or "inputs" in fields:
             # join TxOutputs if needed
@@ -238,10 +248,10 @@ async def search_for_transactions(txSearch: TxSearch,
         "transaction_id": tx.Transaction.transaction_id,
         "hash": tx.Transaction.hash,
         "mass": tx.Transaction.mass,
-        "block_hash": tx.Transaction.block_hash,
+        "block_hash": [x.block_hash for x in tx_blocks if x.transaction_id == tx.Transaction.transaction_id],
         "block_time": tx.Transaction.block_time,
-        "is_accepted": tx.Transaction.is_accepted,
-        "accepting_block_hash": tx.Transaction.accepting_block_hash,
+        "is_accepted": True if tx.accepting_block_hash else False,
+        "accepting_block_hash": tx.accepting_block_hash,
         "accepting_block_blue_score": tx.blue_score,
         "outputs": parse_obj_as(List[TxOutput],
                                 [x for x in tx_outputs if x.transaction_id == tx.Transaction.transaction_id])

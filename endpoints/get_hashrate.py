@@ -1,5 +1,6 @@
 # encoding: utf-8
 import json
+from datetime import datetime
 
 from pydantic import BaseModel
 from sqlalchemy import select
@@ -74,7 +75,7 @@ async def get_max_hashrate():
                     "blockheader":
                         {
                             "hash": block.hash,
-                            "timestamp": block.timestamp.isoformat(),
+                            "timestamp": datetime.fromtimestamp(block.timestamp / 1000).isoformat(),
                             "difficulty": block.difficulty,
                             "daaScore": block.daa_score,
                             "blueScore": block.blue_score

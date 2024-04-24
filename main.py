@@ -36,9 +36,10 @@ if os.getenv('VSPC_REQUEST') == 'true':
 
 @app.on_event("startup")
 async def startup():
+    # We don't want to mess with the new filler's views!
     # create db if needed
-    if IS_SQL_DB_CONFIGURED:
-        await create_all(drop=False)
+    # if False and IS_SQL_DB_CONFIGURED:
+    #     await create_all(drop=False)
     # get kaspad
     await get_kas_market_data()
 
