@@ -5,6 +5,7 @@ on: push
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -18,7 +19,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: supertypo/kaspa-rest-server:${{github.sha.slice(0,8)}}
+          tags: supertypo/kaspa-rest-server:${{ github.sha }}
           file: ./docker/Dockerfile
           build-args: |
             version=${{github.ref_name}}
