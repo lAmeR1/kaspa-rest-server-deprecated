@@ -18,9 +18,9 @@ async def get_price(stringOnly: bool = False):
     Returns the current price for Kaspa in USD.
     """
     if stringOnly:
-        return PlainTextResponse(content=str(await get_kas_price()))
+        return PlainTextResponse(content=str(0))
 
-    return {"price": await get_kas_price()}
+    return {"price": 0}
 
 
 @app.get("/info/market-data",
@@ -31,4 +31,4 @@ async def get_market_data():
     """
     Returns market data for kaspa.
     """
-    return await get_kas_market_data()
+    return {}
