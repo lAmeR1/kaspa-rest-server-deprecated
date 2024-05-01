@@ -1,5 +1,4 @@
-name: Docker Image :wq
-:w:~/
+name: Docker Image
 on: push
 
 jobs:
