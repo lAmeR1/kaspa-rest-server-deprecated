@@ -1,21 +1,22 @@
 # encoding: utf-8
-
+import os
 from fastapi import Path, HTTPException
 from pydantic import BaseModel
 
+from constants import ADDRESS_EXAMPLE, REGEX_KASPA_ADDRESS, IS_TESTNET
 from server import app, kaspad_client
 
 
 class BalanceResponse(BaseModel):
-    address: str = "kaspa:pzhh76qc82wzduvsrd9xh4zde9qhp0xc8rl7qu2mvl2e42uvdqt75zrcgpm00"
+    address: str = ADDRESS_EXAMPLE
     balance: int = 38240000000
 
 
 @app.get("/addresses/{kaspaAddress}/balance", response_model=BalanceResponse, tags=["Kaspa addresses"])
 async def get_balance_from_kaspa_address(
         kaspaAddress: str = Path(
-            description="Kaspa address as string e.g. kaspa:pzhh76qc82wzduvsrd9xh4zde9qhp0xc8rl7qu2mvl2e42uvdqt75zrcgpm00",
-            regex="^kaspa\:[a-z0-9]{61,63}$")):
+            description=f"Kaspa address as string e.g. {ADDRESS_EXAMPLE}",
+            regex=REGEX_KASPA_ADDRESS)):
     """
     Get balance for a given kaspa address
     """
