@@ -1,30 +1,41 @@
-name: Docker Image TESTBUILD
+name: Python App Workflow
 
-on: push
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        arch: [amd64, arm64]
+
+    runs-on: ${{ matrix.os }}
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: Login to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: lamer1
-          password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
-      - name: Build and push
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: true
-          platforms: linux/amd64
-          tags: supertypo/kaspa-rest-server:${{ github.sha }}
-          file: ./docker/Dockerfile
-          build-args: |
-            version=${{github.ref_name}}
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up QEMU (for ARM64 emulation)
+      if: matrix.arch == 'arm64'
+      run: |
+        sudo apt-get install -y qemu-user-static
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.12'
+
+    - name: Install dependencies
+      run: |
+        pip install pipenv
+        pipenv install --dev --deploy
+
+    - name: Build and run the application
+      run: |
+        pipenv run gunicorn -b 0.0.0.0:8000 -w 1 -k uvicorn.workers.UvicornWorker main:app --timeout 120
