@@ -1,41 +1,35 @@
 name: Python App Workflow
 
-on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+on: push
 
 jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-latest]
-        arch: [amd64, arm64]
+        os: [ ubuntu-latest ]
+        arch: [ amd64, arm64 ]
 
     runs-on: ${{ matrix.os }}
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Set up QEMU (for ARM64 emulation)
-      if: matrix.arch == 'arm64'
-      run: |
-        sudo apt-get install -y qemu-user-static
+      - name: Set up QEMU (for ARM64 emulation)
+        if: matrix.arch == 'arm64'
+        run: |
+          sudo apt-get install -y qemu-user-static
 
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.12'
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.12'
 
-    - name: Install dependencies
-      run: |
-        pip install pipenv
-        pipenv install --dev --deploy
+      - name: Install dependencies
+        run: |
+          pip install pipenv
+          pipenv install --dev --deploy
 
-    - name: Build and run the application
-      run: |
-        pipenv run gunicorn -b 0.0.0.0:8000 -w 1 -k uvicorn.workers.UvicornWorker main:app --timeout 120
+      - name: Build and run the application
+        run: |
+          pipenv run gunicorn -b 0.0.0.0:8000 -w 1 -k uvicorn.workers.UvicornWorker main:app --timeout 120
