@@ -34,7 +34,7 @@ jobs:
       run: |
         docker buildx build \
           --platform linux/amd64,linux/arm64 \
-          -t supertypo/kaspa-rest-server:${{ SHORT_SHA }} \
+          -t supertypo/kaspa-rest-server:${SHORT_SHA} \
           --push .
         
-        docker buildx imagetools inspect supertypo/kaspa-rest-server:${{ SHORT_SHA }}
+        docker buildx imagetools inspect supertypo/kaspa-rest-server:${SHORT_SHA}
