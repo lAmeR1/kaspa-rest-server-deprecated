@@ -13,11 +13,7 @@ RUN pip install --upgrade pip
 RUN pip install \
   pipenv
 
-#RUN addgroup -S -g 55747 api \
-#  && adduser -h /app -S -D -g '' -G api -u 55747 api
-
 WORKDIR /app
-USER api
 
 COPY --chown=api:api . /app
 
