@@ -9,7 +9,7 @@ ARG version
 ENV VERSION=$version
 
 # Install & use pipenv
-COPY Pipfile Pipfile.lock ./
+COPY Pipfile ./
 RUN python -m pip install --upgrade pip
 RUN pip install pipenv && pipenv install --dev --system --deploy
 
