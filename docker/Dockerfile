@@ -11,7 +11,8 @@ ENV VERSION=$version
 # Install & use pipenv
 COPY Pipfile ./
 RUN python -m pip install --upgrade pip
-RUN pip install pipenv && pipenv install --dev --system --deploy
+RUN pip install pipenv
+RUN pipenv install -v
 
 WORKDIR /app
 COPY . /app
