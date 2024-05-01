@@ -1,4 +1,4 @@
-FROM python:3.12-alpine
+FROM python:3.12-slim
 
 ARG REPO_DIR
 
@@ -16,6 +16,8 @@ RUN apk --no-cache add \
   linux-headers \
   libpq-dev \
   dumb-init
+
+RUN pip install --upgrade pip
 
 RUN pip install \
   pipenv
