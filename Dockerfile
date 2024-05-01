@@ -12,12 +12,13 @@ RUN apt update
 RUN apt install uvicorn gunicorn -y
 
 WORKDIR /app
-COPY poetry.lock pyproject.toml ./
+COPY . .
 
 RUN python -m pip install --upgrade pip
 RUN pip install poetry
 RUN poetry install --no-root --no-interaction
 
-COPY . .
+# make pipenv commands still running
+RUN ln /usr/local/bin/poetry /usr/local/bin/pipenv
 
 CMD poetry run gunicorn -b 0.0.0.0:8000 -w 4 -k uvicorn.workers.UvicornWorker main:app --timeout 120

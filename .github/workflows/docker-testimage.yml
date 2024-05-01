@@ -1,5 +1,5 @@
-name: Docker Image TESTBUILD
-
+name: Docker Image :wq
+:w:~/
 on: push
 
 jobs:
@@ -12,6 +12,8 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
+    - name: Add SHORT_SHA env property with commit short sha
+      run: echo "SHORT_SHA=`echo ${GITHUB_SHA} | cut -c1-8`" >> $GITHUB_ENV
     - name: Checkout code
       uses: actions/checkout@v2
 
@@ -33,7 +35,7 @@ jobs:
       run: |
         docker buildx build \
           --platform linux/amd64,linux/arm64 \
-          -t supertypo/kaspa-rest-server:branchtest \
+          -t supertypo/kaspa-rest-server:${{ SHORT_SHA }} \
           --push .
         
-        docker buildx imagetools inspect supertypo/kaspa-rest-server:branchtest
+        docker buildx imagetools inspect supertypo/kaspa-rest-server:${{ SHORT_SHA }}
