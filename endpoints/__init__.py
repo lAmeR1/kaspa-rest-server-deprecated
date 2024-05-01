@@ -29,7 +29,7 @@ def sql_db_only(func):
 def mainnet_only(func):
     @wraps(func)
     async def wrapper(*args, **kwargs):
-        if not IS_TESTNET:
+        if IS_TESTNET:
             raise HTTPException(status_code=503, detail="Endpoint not available. "
                                                         "This endpoint is only available in mainnet.")
         return await func(*args, **kwargs)

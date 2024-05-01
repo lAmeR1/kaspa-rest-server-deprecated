@@ -1,3 +1,5 @@
+import os
+
 IS_TESTNET = os.getenv('TESTNET', 'false').lower() == 'true'
 REGEX_KASPA_ADDRESS = "^kaspa\:[a-z0-9]{61,63}$" if not IS_TESTNET else "^kaspatest\:[a-z0-9]{61,63}$"
 

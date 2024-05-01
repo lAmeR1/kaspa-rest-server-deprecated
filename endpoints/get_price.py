@@ -3,6 +3,7 @@
 from pydantic import BaseModel
 from starlette.responses import PlainTextResponse
 
+from endpoints import mainnet_only
 from helper import get_kas_price, get_kas_market_data
 from server import app
 
