@@ -28,7 +28,7 @@ USER api
 
 COPY --chown=api:api . /app
 
-RUN pipenv install --deploy
+RUN pipenv install --deploy -v
 
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 
