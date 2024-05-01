@@ -1,7 +1,6 @@
 name: Docker Image TESTBUILD
 
-on:
-  workflow_dispatch
+on: push
 
 jobs:
   build:
