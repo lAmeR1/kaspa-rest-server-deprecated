@@ -26,8 +26,8 @@ class VerboseDataModel(BaseModel):
     transactionIds: List[str] | None = ["533f8314bf772259fe517f53507a79ebe61c8c6a11748d93a0835551233b3311"]
     blueScore: str = "18483232"
     childrenHashes: List[str] | None = None
-    mergeSetBluesHashes: List[str] = ["580f65c8da9d436480817f6bd7c13eecd9223b37f0d34ae42fb17e1e9fda397e"]
-    mergeSetRedsHashes: List[str] = ["580f65c8da9d436480817f6bd7c13eecd9223b37f0d34ae42fb17e1e9fda397e"]
+    mergeSetBluesHashes: List[str] = []
+    mergeSetRedsHashes: List[str] = []
     isChainBlock: bool | None = None
 
 
