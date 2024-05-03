@@ -1,6 +1,7 @@
-from sqlalchemy import Column, String, Integer, BigInteger, SmallInteger
+from sqlalchemy import Column, Integer, BigInteger, SmallInteger
 
 from dbsession import Base
+from helper.PublicKeyType import get_public_key_type
 from models.AddressColumn import AddressColumn
 from models.type_decorators.HexColumn import HexColumn
 
@@ -21,7 +22,10 @@ class TransactionOutput(Base):
     amount = Column(BigInteger)
     script_public_key = Column(HexColumn)
     script_public_key_address = Column(AddressColumn)
-    script_public_key_type = Column(String)
+
+    @property
+    def script_public_key_type(self):
+        return get_public_key_type(self.script_public_key)
 
 
 class TransactionInput(Base):
