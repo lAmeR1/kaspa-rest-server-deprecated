@@ -2,6 +2,7 @@ from sqlalchemy import Column, String, Integer, BigInteger, Boolean, Index
 from sqlalchemy.dialects.postgresql import ARRAY
 
 from dbsession import Base
+from helper.PublicKeyType import get_public_key_type
 
 
 class Transaction(Base):
@@ -29,8 +30,11 @@ class TransactionOutput(Base):
     amount = Column(BigInteger)
     script_public_key = Column(String)
     script_public_key_address = Column(String)
-    script_public_key_type = Column(String)
     accepting_block_hash = Column(String)
+
+    @property
+    def script_public_key_type(self):
+        return get_public_key_type(self.script_public_key)
 
 
 Index("idx_txouts", TransactionOutput.transaction_id)
