@@ -12,6 +12,7 @@ from dbsession import async_session
 from endpoints import filter_fields, sql_db_only
 from models.Block import Block
 from models.BlockTransaction import BlockTransaction
+from models.Subnetwork import Subnetwork
 from models.Transaction import Transaction, TransactionOutput, TransactionInput
 from models.TransactionAcceptance import TransactionAcceptance
 from server import app
@@ -92,7 +93,8 @@ async def get_transaction(response: Response,
     Get block information for a given block id
     """
     async with async_session() as s:
-        tx = await s.execute(select(Transaction, TransactionAcceptance.block_hash.label("accepting_block_hash"), Block.blue_score)
+        tx = await s.execute(select(Transaction, Subnetwork, TransactionAcceptance.block_hash.label("accepting_block_hash"), Block.blue_score)
+                             .join(Subnetwork, Transaction.subnetwork_id == Subnetwork.id)
                              .join(TransactionAcceptance, Transaction.transaction_id == TransactionAcceptance.transaction_id, isouter=True)
                              .join(Block, TransactionAcceptance.block_hash == Block.hash, isouter=True)
                              .filter(Transaction.transaction_id == transactionId))
@@ -147,7 +149,7 @@ async def get_transaction(response: Response,
 
     if tx:
         return {
-            "subnetwork_id": tx.Transaction.subnetwork_id,
+            "subnetwork_id": tx.Subnetwork.subnetwork_id,
             "transaction_id": tx.Transaction.transaction_id,
             "hash": tx.Transaction.hash,
             "mass": tx.Transaction.mass,
