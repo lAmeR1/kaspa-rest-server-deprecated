@@ -5,7 +5,6 @@ from typing import List
 
 from fastapi import Path, HTTPException, Query, Response
 from pydantic import BaseModel, parse_obj_as
-from sqlalchemy import subquery
 from sqlalchemy.future import select
 
 from dbsession import async_session
@@ -158,8 +157,8 @@ async def get_transaction(response: Response,
             "is_accepted": True if tx.accepting_block_hash else False,
             "accepting_block_hash": tx.accepting_block_hash,
             "accepting_block_blue_score": tx.blue_score,
-            "outputs": parse_obj_as(List[TxOutput], tx_outputs) if tx_outputs else None,
-            "inputs": parse_obj_as(List[TxInput], tx_inputs) if tx_inputs else None
+            "outputs": parse_obj_as(List[TxOutput], sorted(tx_outputs, key=lambda x: x.index)) if tx_outputs else None,
+            "inputs": parse_obj_as(List[TxInput], sorted(tx_inputs, key=lambda x: x.index)) if tx_inputs else None
         }
     else:
         raise HTTPException(status_code=404, detail="Transaction not found", headers={
@@ -256,9 +255,11 @@ async def search_for_transactions(txSearch: TxSearch,
         "accepting_block_hash": tx.accepting_block_hash,
         "accepting_block_blue_score": tx.blue_score,
         "outputs": parse_obj_as(List[TxOutput],
-                                [x for x in tx_outputs if x.transaction_id == tx.Transaction.transaction_id])
+                                sorted([x for x in tx_outputs if x.transaction_id == tx.Transaction.transaction_id],
+                                       key=lambda x: x.index))
         if tx_outputs else None,  # parse only if needed
         "inputs": parse_obj_as(List[TxInput],
-                               [x for x in tx_inputs if x.transaction_id == tx.Transaction.transaction_id])
+                               sorted([x for x in tx_inputs if x.transaction_id == tx.Transaction.transaction_id],
+                                      key=lambda x: x.index))
         if tx_inputs else None  # parse only if needed
     }, fields) for tx in tx_list)
