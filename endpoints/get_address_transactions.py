@@ -4,7 +4,7 @@ import time
 from enum import Enum
 from typing import List
 
-from fastapi import Path, Query
+from fastapi import Path, Query, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import text, func
 from sqlalchemy.future import select
@@ -13,6 +13,7 @@ from starlette.responses import Response
 from dbsession import async_session
 from endpoints import sql_db_only
 from endpoints.get_transactions import search_for_transactions, TxSearch, TxModel
+from models.AddressKnown import AddressKnown
 from models.TxAddrMapping import TxAddrMapping
 from server import app
 
@@ -21,6 +22,7 @@ DESC_RESOLVE_PARAM = "Use this parameter if you want to fetch the TransactionInp
                      "adds it into each TxInput."
 
 REGEX_KASPA_ADDRESS = "^kaspa(test)?\:[a-z0-9]{61,63}$"
+
 
 class TransactionsReceivedAndSpent(BaseModel):
     tx_received: str
@@ -34,6 +36,11 @@ class TransactionForAddressResponse(BaseModel):
 
 class TransactionCount(BaseModel):
     total: int
+
+
+class AddressName(BaseModel):
+    address: str
+    name: str
 
 
 class PreviousOutpointLookupMode(str, Enum):
@@ -62,7 +69,8 @@ async def get_transactions_for_address(
     # WHERE "script_public_key_address" = 'kaspa:qp7d7rzrj34s2k3qlxmguuerfh2qmjafc399lj6606fc7s69l84h7mrj49hu6'
     #
     # ORDER by transactions_outputs.transaction_id
-    kaspaAddress = re.sub(r"^kaspa(test)?:", "", kaspaAddress)  # Custom query bypasses the TypeDecorator, must handle it manually
+    kaspaAddress = re.sub(r"^kaspa(test)?:", "",
+                          kaspaAddress)  # Custom query bypasses the TypeDecorator, must handle it manually
     async with async_session() as session:
         resp = await session.execute(
             text(f"""
@@ -216,3 +224,29 @@ async def get_transaction_count_for_address(
         tx_count = await s.execute(count_query)
 
     return TransactionCount(total=tx_count.scalar())
+
+
+@app.get("/addresses/{kaspaAddress}/name",
+         response_model=AddressName | None,
+         tags=["Kaspa addresses"])
+@sql_db_only
+async def get_name_for_address(
+        response: Response,
+        kaspaAddress: str = Path(description="Kaspa address as string e.g. "
+                                             "kaspa:qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqkx9awp4e",
+                                 regex=REGEX_KASPA_ADDRESS)
+):
+    """
+    Get the name for an address
+    """
+    async with async_session() as s:
+        r = (await s.execute(
+            select(AddressKnown)
+            .filter(AddressKnown.address == kaspaAddress))).first()
+
+    response.headers["Cache-Control"] = "public, max-age=600"
+    if r:
+        return AddressName(address=r.AddressKnown.address, name=r.AddressKnown.name)
+    else:
+        raise HTTPException(status_code=404, detail="Address name not found",
+                            headers={"Cache-Control": "public, max-age=600"})
