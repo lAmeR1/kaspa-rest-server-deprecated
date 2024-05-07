@@ -37,8 +37,8 @@ jobs:
           docker buildx build \
             --platform linux/amd64,linux/arm64 \
             -t supertypo/kaspa-rest-server:${{github.ref_name}} \
-            -t supertypo/kaspa-rest-server:latest
-            --build-arg version=${{github.ref_name}}
+            -t supertypo/kaspa-rest-server:latest \
+            --build-arg version=${{github.ref_name}} \
             --push .
           
           docker buildx imagetools inspect supertypo/kaspa-rest-server:${SHORT_SHA}
