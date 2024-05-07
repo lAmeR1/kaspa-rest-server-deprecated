@@ -1,0 +1,29 @@
+[tool.poetry]
+name = "kaspa-rest-server"
+version = "0.0.32"
+description = ""
+authors = ["lAmeR1 <lamer1@github.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+grpcio = "^1.63.0"
+grpcio-tools = "^1.63.0"
+fastapi = "^0.110.3"
+gunicorn = "^22.0.0"
+uvicorn = "^0.29.0"
+requests = "^2.31.0"
+websockets = "^12.0"
+asyncpg = "^0.29.0"
+cachetools = "^5.3.3"
+aiohttp = "^3.9.5"
+aiocache = "^0.12.2"
+psycopg2-binary = "^2.9.9"
+waitress = "^3.0.0"
+starlette = "^0.37.2"
+fastapi-utils = "^0.2.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
