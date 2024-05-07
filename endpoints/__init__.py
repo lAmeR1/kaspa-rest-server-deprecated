@@ -3,7 +3,7 @@ import os
 from fastapi import HTTPException
 from functools import wraps
 
-from constants import IS_TESTNET
+from constants import NETWORK_TYPE
 
 
 def filter_fields(response_dict, fields):
@@ -29,7 +29,7 @@ def sql_db_only(func):
 def mainnet_only(func):
     @wraps(func)
     async def wrapper(*args, **kwargs):
-        if IS_TESTNET:
+        if NETWORK_TYPE != "mainnet":
             raise HTTPException(status_code=503, detail="Endpoint not available. "
                                                         "This endpoint is only available in mainnet.")
         return await func(*args, **kwargs)

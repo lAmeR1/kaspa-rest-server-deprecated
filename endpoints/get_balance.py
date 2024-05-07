@@ -1,9 +1,8 @@
 # encoding: utf-8
-import os
 from fastapi import Path, HTTPException
 from pydantic import BaseModel
 
-from constants import ADDRESS_EXAMPLE, REGEX_KASPA_ADDRESS, IS_TESTNET
+from constants import ADDRESS_EXAMPLE, REGEX_KASPA_ADDRESS
 from server import app, kaspad_client
 
 

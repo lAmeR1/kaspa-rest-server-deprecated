@@ -1,26 +1,44 @@
-name: Docker Image CI
-
+name: Docker Image
 on:
   release:
     types: [ published ]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ ubuntu-latest ]
+        arch: [ amd64, arm64 ]
+
+    runs-on: ${{ matrix.os }}
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      - name: Add SHORT_SHA env property with commit short sha
+        run: echo "SHORT_SHA=`echo ${GITHUB_SHA} | cut -c1-7`" >> $GITHUB_ENV
+      - name: Checkout code
+        uses: actions/checkout@v2
+
       - name: Login to Docker Hub
         uses: docker/login-action@v2
         with:
           username: lamer1
           password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
-      - name: Build and push
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          push: true
-          tags: supertypo/kaspa-rest-server:${{github.ref_name}}, supertypo/kaspa-rest-server:latest
-          file: ./docker/Dockerfile
-          build-args: |
-            version=${{github.ref_name}}
+
+      - name: Set up QEMU (for ARM64 emulation)
+        if: matrix.arch == 'arm64'
+        run: |
+          sudo apt-get install -y qemu-user-static
+
+      - name: Set up Docker Buildx (for multi-platform builds)
+        uses: docker/setup-buildx-action@v1
+
+      - name: Build and push Docker image
+        run: |
+          docker buildx build \
+            --platform linux/amd64,linux/arm64 \
+            -t supertypo/kaspa-rest-server:${{github.ref_name}} \
+            -t supertypo/kaspa-rest-server:latest
+            --build-arg version=${{github.ref_name}}
+            --push .
+          
+          docker buildx imagetools inspect supertypo/kaspa-rest-server:${SHORT_SHA}
