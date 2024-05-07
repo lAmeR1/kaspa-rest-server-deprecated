@@ -21,4 +21,4 @@ match NETWORK_TYPE:
 ADDRESS_PREFIX = address_prefix
 ADDRESS_EXAMPLE = address_example
 
-REGEX_KASPA_ADDRESS = f"^{ADDRESS_PREFIX}:[a-z0-9]{61, 63}$"
+REGEX_KASPA_ADDRESS = "^" + ADDRESS_PREFIX + ":[a-z0-9]{61,63}$"
