@@ -21,6 +21,7 @@ class UtxoModel(BaseModel):
     amount: str = "11501593788",
     scriptPublicKey: ScriptPublicKeyModel
     blockDaaScore: str = "18867232"
+    isCoinbase: bool = False
 
 
 class UtxoResponse(BaseModel):
