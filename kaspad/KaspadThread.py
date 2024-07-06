@@ -56,7 +56,7 @@ class KaspadThread(object):
             try:
                 async for resp in self.stub.MessageStream(self.yield_cmd(command, params), timeout=120):
                     self.__queue.put_nowait("done")
-                    return json_format.MessageToDict(resp)
+                    return json_format.MessageToDict(resp, always_print_fields_with_no_presence=True)
             except grpc.aio._call.AioRpcError as e:
                 raise KaspadCommunicationError(str(e))
 
@@ -65,7 +65,7 @@ class KaspadThread(object):
             async for resp in self.stub.MessageStream(self.yield_cmd(command, params)):
                 # self.__queue.put_nowait("done")
                 if callback_func:
-                    await callback_func(json_format.MessageToDict(resp))
+                    await callback_func(json_format.MessageToDict(resp, always_print_fields_with_no_presence=True))
 
             print("loop done...")
 
