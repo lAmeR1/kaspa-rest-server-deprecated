@@ -172,8 +172,8 @@ async def get_blocks_from_bluescore(response: Response,
             "transactionIds": [tx["verboseData"]["transactionId"] for tx in txs] if includeTransactions else None,
             "blueScore": block.blue_score,
             "childrenHashes": None,
-            "mergeSetBluesHashes": block.merge_set_blues_hashes,
-            "mergeSetRedsHashes": block.merge_set_reds_hashes,
+            "mergeSetBluesHashes": block.merge_set_blues_hashes or [],
+            "mergeSetRedsHashes": block.merge_set_reds_hashes or [],
             "isChainBlock": is_chain_block,
         }
     } for block, is_chain_block in blocks_cb]
@@ -228,8 +228,8 @@ async def get_block_from_db(blockId):
                 "transactionIds": None,  # information not in database
                 "blueScore": requested_block.blue_score,
                 "childrenHashes": None,  # information not in database
-                "mergeSetBluesHashes": requested_block.merge_set_blues_hashes,
-                "mergeSetRedsHashes": requested_block.merge_set_reds_hashes,
+                "mergeSetBluesHashes": requested_block.merge_set_blues_hashes or [],
+                "mergeSetRedsHashes": requested_block.merge_set_reds_hashes or [],
                 "isChainBlock": is_chain_block,  # information not in database
             }
         }
