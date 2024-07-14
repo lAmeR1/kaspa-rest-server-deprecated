@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Float, Boolean, BigInteger, SmallInteger
+from sqlalchemy import Column, Float, BigInteger, SmallInteger
 
 from dbsession import Base
 from models.type_decorators.HexColumn import HexColumn
@@ -20,7 +20,6 @@ class Block(Base):
     daa_score = Column(BigInteger)
     hash_merkle_root = Column(HexColumn)
     nonce = Column(ByteColumn)
-    parents = Column(HexArrayColumn)
     pruning_point = Column(HexColumn)
     timestamp = Column(BigInteger)
     utxo_commitment = Column(HexColumn)
