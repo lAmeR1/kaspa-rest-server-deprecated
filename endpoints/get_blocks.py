@@ -52,15 +52,15 @@ class BlockHeader(BaseModel):
     pruningPoint: str = "5d32a9403273a34b6551b84340a1459ddde2ae6ba59a47987a6374340ba41d5d"
 
 
+class ExtraModel(BaseModel):
+    color: str | None = None
+
+
 class BlockModel(BaseModel):
     header: BlockHeader
     transactions: list | None
     verboseData: VerboseDataModel
-
-
-class BlockBlueModel(BaseModel):
-    hash: str
-    isBlue: bool | None
+    extra: ExtraModel | None
 
 
 class BlockResponse(BaseModel):
@@ -71,74 +71,10 @@ class BlockResponse(BaseModel):
     blocks: List[BlockModel] | None
 
 
-@app.get("/blocks/{blockId}/isBlue", response_model=BlockBlueModel, tags=["Kaspa blocks"])
-async def is_block_blue(response: Response,
-                          blockId: str = Path(regex="[a-f0-9]{64}")):
-    resp = await kaspad_client.request("getBlockRequest",
-                                       params={
-                                           "hash": blockId,
-                                           "includeTransactions": False
-                                       })
-    block = None
-    isBlue = None
-    if "block" in resp["getBlockResponse"]:
-        block = resp["getBlockResponse"]["block"]
-        isBlue = await is_block_blue_from_kaspad(block)
-    elif IS_SQL_DB_CONFIGURED:
-        response.headers["X-Data-Source"] = "Database"
-        block = await get_block_from_db(blockId, False)
-        isBlue = await is_block_blue_from_db(block)
-
-    add_cache_control_for_block(block, response)
-
-    return {
-        "hash": block["verboseData"]["hash"],
-        "isBlue": isBlue
-    }
-
-
-async def is_block_blue_from_kaspad(block):
-    blockId = block["verboseData"]["hash"]
-    childrenHashes = block["verboseData"]["childrenHashes"]
-    for childId in childrenHashes:
-        resp = await kaspad_client.request(
-            "getBlockRequest",
-            params={
-                "hash": childId,
-                "includeTransactions": False
-            })
-        if "block" in resp["getBlockResponse"]:
-            block = resp["getBlockResponse"]["block"]
-            if block["verboseData"]["isChainBlock"]:
-                if blockId in block["verboseData"]["mergeSetBluesHashes"]:
-                    return True
-                elif blockId in block["verboseData"]["mergeSetRedsHashes"]:
-                    return False
-    return None
-
-
-async def is_block_blue_from_db(block):
-    blockId = block["verboseData"]["hash"]
-    async with async_session() as s:
-        blocks = (await s.execute(
-            select(Block)
-            .join(ChainBlock, ChainBlock.block_hash == Block.hash)
-            .join(BlockParent, BlockParent.block_hash == ChainBlock.block_hash)
-            .filter(BlockParent.parent_hash == blockId)
-        )).scalars().all()
-        _logger.warning("Got %d blocks", len(blocks))
-        for block in blocks:
-            if blockId in block.merge_set_blues_hashes:
-                return True
-            elif blockId in block.merge_set_reds_hashes:
-                return False
-    return None
-
-
-_logger = logging.getLogger(__name__)
 @app.get("/blocks/{blockId}", response_model=BlockModel, tags=["Kaspa blocks"])
 async def get_block(response: Response,
-                    blockId: str = Path(regex="[a-f0-9]{64}")):
+                    blockId: str = Path(regex="[a-f0-9]{64}"),
+                    includeColor: bool = False):
     """
     Get block information for a given block id
     """
@@ -150,10 +86,18 @@ async def get_block(response: Response,
     block = None
     if "block" in resp["getBlockResponse"]:
         block = resp["getBlockResponse"]["block"]
+        if block and includeColor:
+            block["extra"] = {
+                "color": await get_block_color_from_kaspad(block)
+            }
     else:
         if IS_SQL_DB_CONFIGURED:
             response.headers["X-Data-Source"] = "Database"
             block = await get_block_from_db(blockId, True)
+            if block and includeColor:
+                block["extra"] = {
+                    "color": await get_block_color_from_db(block)
+                }
 
     add_cache_control_for_block(block, response)
     return block
@@ -213,6 +157,43 @@ async def get_block_from_db(blockId, includeTransactions):
     return map_block_from_db(block, is_chain_block, parents, children, transaction_ids, transactions)
 
 
+async def get_block_color_from_kaspad(block):
+    blockId = block["verboseData"]["hash"]
+    childrenHashes = block["verboseData"]["childrenHashes"]
+    for childId in childrenHashes:
+        resp = await kaspad_client.request(
+            "getBlockRequest",
+            params={
+                "hash": childId,
+                "includeTransactions": False
+            })
+        if "block" in resp["getBlockResponse"]:
+            block = resp["getBlockResponse"]["block"]
+            if block["verboseData"]["isChainBlock"]:
+                if blockId in block["verboseData"]["mergeSetBluesHashes"]:
+                    return 'blue'
+                elif blockId in block["verboseData"]["mergeSetRedsHashes"]:
+                    return 'red'
+    return None
+
+
+async def get_block_color_from_db(block):
+    blockId = block["verboseData"]["hash"]
+    async with async_session() as s:
+        blocks = (await s.execute(
+            select(Block)
+            .join(ChainBlock, ChainBlock.block_hash == Block.hash)
+            .join(BlockParent, BlockParent.block_hash == ChainBlock.block_hash)
+            .filter(BlockParent.parent_hash == blockId)
+        )).scalars().all()
+        for block in blocks:
+            if blockId in block.merge_set_blues_hashes:
+                return 'blue'
+            elif blockId in block.merge_set_reds_hashes:
+                return 'red'
+    return None
+
+
 def map_block_from_db(block, is_chain_block, parents, children, transaction_ids, transactions):
     return {
         "header": {
@@ -239,7 +220,7 @@ def map_block_from_db(block, is_chain_block, parents, children, transaction_ids,
             "childrenHashes": children,
             "mergeSetBluesHashes": block.merge_set_blues_hashes or [],
             "mergeSetRedsHashes": block.merge_set_reds_hashes or [],
-            "isChainBlock": is_chain_block or False,
+            "isChainBlock": is_chain_block or False
         }
     }
 
@@ -255,7 +236,6 @@ def block_join_query():
 
 
 def add_cache_control_for_block(block, response):
-    _logger.warning(block)
     if not block:
         raise HTTPException(status_code=404, detail="Block not found", headers={"Cache-Control": "public, max-age=3"})
     elif int(block["header"]["blueScore"]) > current_blue_score_data["blue_score"] - 20:
