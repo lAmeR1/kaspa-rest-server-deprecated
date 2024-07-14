@@ -29,7 +29,7 @@ class VerboseDataModel(BaseModel):
     childrenHashes: List[str] | None = None
     mergeSetBluesHashes: List[str] = []
     mergeSetRedsHashes: List[str] = []
-    isChainBlock: bool | None = None
+    isChainBlock: bool = False
 
 
 class ParentHashModel(BaseModel):
@@ -171,7 +171,7 @@ async def get_blocks_from_bluescore(response: Response,
             "childrenHashes": children,
             "mergeSetBluesHashes": block.merge_set_blues_hashes or [],
             "mergeSetRedsHashes": block.merge_set_reds_hashes or [],
-            "isChainBlock": is_chain_block,
+            "isChainBlock": is_chain_block or False,
         }
     } for block, is_chain_block, parents, children, transaction_ids in blocks]
 
@@ -211,7 +211,7 @@ async def get_block_from_db(blockId):
             "childrenHashes": children,
             "mergeSetBluesHashes": block.merge_set_blues_hashes or [],
             "mergeSetRedsHashes": block.merge_set_reds_hashes or [],
-            "isChainBlock": is_chain_block,
+            "isChainBlock": is_chain_block or False,
         }
     }
 
@@ -219,7 +219,7 @@ async def get_block_from_db(blockId):
 def block_join_query():
     return select(
         Block,
-        case([(exists().where(ChainBlock.block_hash == Block.hash), True)], else_=False),
+        exists().where(ChainBlock.block_hash == Block.hash),
         select(func.array_agg(BlockParent.parent_hash)).where(BlockParent.block_hash == Block.hash).scalar_subquery(),
         select(func.array_agg(BlockParent.block_hash)).where(BlockParent.parent_hash == Block.hash).scalar_subquery(),
         select(func.array_agg(BlockTransaction.transaction_id)).where(BlockTransaction.block_hash == Block.hash).scalar_subquery(),
