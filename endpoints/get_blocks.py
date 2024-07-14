@@ -169,7 +169,7 @@ async def get_block_color_from_kaspad(block):
             })
         if "block" in resp["getBlockResponse"]:
             block = resp["getBlockResponse"]["block"]
-            if block["verboseData"]["isChainBlock"]:
+            if block["verboseData"].get("isChainBlock", False):
                 if blockId in block["verboseData"]["mergeSetBluesHashes"]:
                     return 'blue'
                 elif blockId in block["verboseData"]["mergeSetRedsHashes"]:
