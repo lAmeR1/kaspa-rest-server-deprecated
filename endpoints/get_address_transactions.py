@@ -10,7 +10,7 @@ from sqlalchemy import text, func
 from sqlalchemy.future import select
 from starlette.responses import Response
 
-from constants import ADDRESS_EXAMPLE
+from constants import ADDRESS_EXAMPLE, REGEX_KASPA_ADDRESS
 from dbsession import async_session
 from endpoints import sql_db_only
 from endpoints.get_transactions import search_for_transactions, TxSearch, TxModel
@@ -21,8 +21,6 @@ from server import app
 DESC_RESOLVE_PARAM = "Use this parameter if you want to fetch the TransactionInput previous outpoint details." \
                      " Light fetches only the address and amount. Full fetches the whole TransactionOutput and " \
                      "adds it into each TxInput."
-
-REGEX_KASPA_ADDRESS = "^kaspa(test)?\:[a-z0-9]{61,63}$"
 
 
 class TransactionsReceivedAndSpent(BaseModel):

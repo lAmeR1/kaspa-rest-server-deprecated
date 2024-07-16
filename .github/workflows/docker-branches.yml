@@ -1,0 +1,44 @@
+name: Docker Image
+on:
+  push:
+    branches-ignore:
+      - main
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        arch: [amd64, arm64]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - name: Add SHORT_SHA env property with commit short sha
+      run: echo "SHORT_SHA=`echo ${GITHUB_SHA} | cut -c1-7`" >> $GITHUB_ENV
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Login to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: lamer1
+        password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
+
+    - name: Set up QEMU (for ARM64 emulation)
+      if: matrix.arch == 'arm64'
+      run: |
+        sudo apt-get install -y qemu-user-static
+
+    - name: Set up Docker Buildx (for multi-platform builds)
+      uses: docker/setup-buildx-action@v1
+
+    - name: Build and push Docker image
+      run: |
+        docker buildx build \
+          --platform linux/amd64,linux/arm64 \
+          -t kaspanet/kaspa-rest-server:${SHORT_SHA} \
+        -t kaspanet/kaspa-rest-server:${GITHUB_REF_NAME} \
+          --push .
+        
+        docker buildx imagetools inspect kaspanet/kaspa-rest-server:${SHORT_SHA}
