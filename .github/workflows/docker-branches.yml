@@ -41,4 +41,4 @@ jobs:
         -t kaspanet/kaspa-rest-server:${GITHUB_REF_NAME} \
           --push .
         
-        docker buildx imagetools inspect supertypo/kaspa-rest-server:${SHORT_SHA}
+        docker buildx imagetools inspect kaspanet/kaspa-rest-server:${SHORT_SHA}
