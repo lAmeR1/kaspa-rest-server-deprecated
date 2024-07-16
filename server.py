@@ -19,7 +19,7 @@ fastapi.logger.logger.setLevel(logging.WARNING)
 app = FastAPI(
     title="Kaspa REST-API server",
     description="This server is to communicate with kaspa network via REST-API",
-    version=os.getenv("VERSION", "tbd"),
+    version=os.getenv("VERSION") or "tbd",
     contact={
         "name": "lAmeR1"
     },

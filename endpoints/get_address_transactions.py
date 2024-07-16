@@ -1,15 +1,13 @@
 # encoding: utf-8
-import re
-import time
+import os
 from enum import Enum
-from typing import List
-
-from fastapi import Path, Query, HTTPException
+from fastapi import Path, Query
 from pydantic import BaseModel
 from sqlalchemy import text, func
 from sqlalchemy.future import select
-from starlette.responses import Response
+from typing import List
 
+from constants import ADDRESS_EXAMPLE, REGEX_KASPA_ADDRESS
 from dbsession import async_session
 from endpoints import sql_db_only
 from endpoints.get_transactions import search_for_transactions, TxSearch, TxModel
@@ -56,8 +54,7 @@ class PreviousOutpointLookupMode(str, Enum):
 @sql_db_only
 async def get_transactions_for_address(
         kaspaAddress: str = Path(
-            description="Kaspa address as string e.g. "
-                        "kaspa:pzhh76qc82wzduvsrd9xh4zde9qhp0xc8rl7qu2mvl2e42uvdqt75zrcgpm00",
+            description=f"Kaspa address as string e.g. {ADDRESS_EXAMPLE}",
             regex=REGEX_KASPA_ADDRESS)):
     """
     Get all transactions for a given address from database
@@ -103,7 +100,7 @@ async def get_transactions_for_address(
 async def get_full_transactions_for_address(
         kaspaAddress: str = Path(
             description="Kaspa address as string e.g. "
-                        "kaspa:pzhh76qc82wzduvsrd9xh4zde9qhp0xc8rl7qu2mvl2e42uvdqt75zrcgpm00",
+                        f"{ADDRESS_EXAMPLE}",
             regex=REGEX_KASPA_ADDRESS),
         limit: int = Query(
             description="The number of records to get",
@@ -211,7 +208,7 @@ async def get_full_transactions_for_address_page(
 async def get_transaction_count_for_address(
         kaspaAddress: str = Path(
             description="Kaspa address as string e.g. "
-                        "kaspa:pzhh76qc82wzduvsrd9xh4zde9qhp0xc8rl7qu2mvl2e42uvdqt75zrcgpm00",
+                        f"{ADDRESS_EXAMPLE}",
             regex=REGEX_KASPA_ADDRESS)
 ):
     """
