@@ -128,9 +128,9 @@ async def get_full_transactions_for_address(
         # so I can re-use the same result in tx_list, TxInput and TxOutput
         tx_within_limit_offset = await s.execute(select(TxAddrMapping.transaction_id)
                                                  .filter(TxAddrMapping.address == kaspaAddress)
+                                                 .order_by(TxAddrMapping.block_time.desc())
                                                  .limit(limit)
                                                  .offset(offset)
-                                                 .order_by(TxAddrMapping.block_time.desc())
                                                  )
 
         tx_ids_in_page = [x[0] for x in tx_within_limit_offset.all()]
@@ -215,11 +215,12 @@ async def get_transaction_count_for_address(
             regex=REGEX_KASPA_ADDRESS)
 ):
     """
-    Count the number of transactions associated with this address
+    Count the number of transactions associated with this address, maximum number of rows counted is 9999
     """
 
     async with async_session() as s:
-        count_query = select(func.count()).filter(TxAddrMapping.address == kaspaAddress)
+        count_query = select(func.count()).select_from(
+            select(TxAddrMapping.block_time).filter(TxAddrMapping.address == kaspaAddress).limit(9999).subquery())
 
         tx_count = await s.execute(count_query)
 
