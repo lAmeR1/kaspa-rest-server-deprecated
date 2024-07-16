@@ -3,6 +3,7 @@ import os
 from pydantic import BaseModel
 from starlette.responses import PlainTextResponse
 
+from endpoints import mainnet_only
 from helper import get_kas_price, get_kas_market_data
 from server import app
 
@@ -13,6 +14,7 @@ class PriceResponse(BaseModel):
 
 
 @app.get("/info/price", response_model=PriceResponse | str, tags=["Kaspa network info"])
+@mainnet_only
 async def get_price(stringOnly: bool = False):
     """
     Returns the current price for Kaspa in USD.
@@ -27,6 +29,7 @@ async def get_price(stringOnly: bool = False):
 @app.get("/info/market-data",
          tags=["Kaspa network info"],
          include_in_schema=False)
+@mainnet_only
 async def get_market_data():
     """
     Returns market data for kaspa.
