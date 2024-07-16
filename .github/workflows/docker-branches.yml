@@ -38,6 +38,7 @@ jobs:
         docker buildx build \
           --platform linux/amd64,linux/arm64 \
           -t kaspanet/kaspa-rest-server:${SHORT_SHA} \
+        -t kaspanet/kaspa-rest-server:${GITHUB_REF_NAME} \
           --push .
         
         docker buildx imagetools inspect supertypo/kaspa-rest-server:${SHORT_SHA}
